@@ -50,9 +50,12 @@ jobs:
           repository: WebFuzzing/EvoMaster
           path: evomaster
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install EvoMaster
-        run: mvn clean install -DskipTests
+      - name: Install EvoMaster root pom.xml
+        run: mvn -N clean install -DskipTests
         working-directory: evomaster
+      - name: Install EvoMaster client-java
+        run: mvn clean install -DskipTests
+        working-directory: evomaster/client-java
       - name: Setup JDK for EMB
         uses: actions/setup-java@v1
         with:
