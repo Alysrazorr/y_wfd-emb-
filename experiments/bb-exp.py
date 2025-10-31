@@ -6,7 +6,7 @@ import sys
 import os
 import stat
 import pathlib
-# import shutil
+import shutil
 
 # recall sys.argv[0] is the script name
 if len(sys.argv) < 4 or len(sys.argv) > 5 :
@@ -43,7 +43,10 @@ SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 # 1 hour
 MAX_TIME_SECONDS = 3600
 
-TIMEOUT_COMMAND = "timeout 90m "
+TIMEOUT_BIN = shutil.which("timeout") or shutil.which("gtimeout")
+if TIMEOUT_BIN is None:
+    raise Exception("Neither 'timeout' nor 'gtimeout' command found. On macOS, please run: 'brew install coreutils'")
+TIMEOUT_COMMAND = f"{TIMEOUT_BIN} 90m "
 
 if not os.path.isdir(BASE_DIR):
     print("creating folder: " + BASE_DIR)
