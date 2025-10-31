@@ -147,7 +147,7 @@ public class ExternalEvoMasterController extends ExternalSutController {
             Class.forName("org.h2.Driver");
             sqlConnection = DriverManager.getConnection(dbUrl(), "sa", "");
 
-            DbCleaner.clearDatabase_H2(sqlConnection, Arrays.asList("flyway_schema_history"));
+            DbCleaner.clearDatabase_H2(sqlConnection, Arrays.asList("flyway_schema_history"), null);
             dbSpecification = Arrays.asList(new DbSpecification(DatabaseType.H2,sqlConnection)
                     .withInitSqlOnResourcePath(INIT_DB_SCRIPT_PATH));
 

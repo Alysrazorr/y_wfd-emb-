@@ -152,7 +152,7 @@ public class ExternalEvoMasterController extends ExternalSutController {
             sqlConnection = DriverManager.getConnection(dbUrl(), "sa", "");
 
             SqlScriptRunnerCached.runScriptFromResourceFile(sqlConnection,"/schema.sql");
-            DbCleaner.clearDatabase_H2(sqlConnection);
+            DbCleaner.clearDatabase_H2(sqlConnection, null, null);
 
             dbSpecification = Arrays.asList(new DbSpecification(DatabaseType.H2,sqlConnection)
                     .withInitSqlOnResourcePath(INIT_DB_SCRIPT_PATH));

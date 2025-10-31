@@ -196,7 +196,7 @@ public class ExternalEvoMasterController extends ExternalSutController {
             /*
                 ensure that the database is clean
              */
-            DbCleaner.clearDatabase_H2(sqlConnection);
+            DbCleaner.clearDatabase_H2(sqlConnection, null, null);
 
             dbSpecification = Arrays.asList(new DbSpecification(DatabaseType.H2,sqlConnection).withInitSqlOnResourcePath(INIT_DB_SCRIPT_PATH));
 

@@ -112,7 +112,7 @@ public class EmbeddedEvoMasterController extends EmbeddedSutController {
 
     @Override
     public void resetStateOfSUT() {
-        DbCleaner.clearDatabase_H2(sqlConnection);
+        DbCleaner.clearDatabase_H2(sqlConnection, null, null);
 
         deleteDir(new File("./target/temp"));
 
