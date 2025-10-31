@@ -193,7 +193,7 @@ public class ExternalEvoMasterController extends ExternalSutController {
              */
             DbCleaner.clearDatabase_Postgres(sqlConnection,
                     "subscriptions",
-                    Arrays.asList("flyway_schema_history"));
+                    Arrays.asList("flyway_schema_history"), null);
 
             dbSpecification = Arrays.asList(new DbSpecification(DatabaseType.POSTGRES,sqlConnection)
                     .withSchemas("subscriptions").withInitSqlOnResourcePath(INIT_DB_SCRIPT_PATH));
