@@ -13,6 +13,10 @@
     </properties>
 
     <repositories>
+        <repository>
+            <id>local-repo</id>
+            <url>file://${project.basedir}/../local-repo</url>
+        </repository>
       <repository>
         <id>central</id>
         <name>Central repository</name>
