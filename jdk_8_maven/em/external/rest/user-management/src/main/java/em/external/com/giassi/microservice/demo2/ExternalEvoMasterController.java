@@ -61,7 +61,7 @@ public class ExternalEvoMasterController extends ExternalSutController {
     private final int sutPort;
     private  String jarLocation;
     private Connection sqlConnection;
-    //private String INIT_DB_SCRIPT_PATH = "/populateDB.sql";
+    private static String INIT_DB_SCRIPT_PATH = "/data.sql";
 
     private List<DbSpecification> dbSpecification;
 
@@ -156,7 +156,8 @@ public class ExternalEvoMasterController extends ExternalSutController {
         try {
             sqlConnection = DriverManager.getConnection(dbUrl(), "root", "root");
 
-            dbSpecification = Arrays.asList(new DbSpecification(DatabaseType.MYSQL,sqlConnection));
+            dbSpecification = Arrays.asList(new DbSpecification(DatabaseType.MYSQL,sqlConnection)
+                    .withInitSqlOnResourcePath(INIT_DB_SCRIPT_PATH));
 
         } catch (Exception e) {
             throw new RuntimeException(e);
