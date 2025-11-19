@@ -481,34 +481,42 @@ def createOneJob(state, sut, seed, setting, configName):
     return code
 
 
+def getJavaExeByJDK(platform):
+
+    if platform == JDK_8:
+        path = JAVA_HOME_8 +"/bin/java"
+    elif platform == JDK_11:
+        path = JAVA_HOME_11 +"/bin/java"
+    elif platform == JDK_17:
+        path = JAVA_HOME_17 +"/bin/java"
+    elif platform == JDK_21:
+        path = JAVA_HOME_21 +"/bin/java"
+    else:
+        raise Exception("ERROR: unhandled JVM version: " + platform)
+
+    path = str(pathlib.PurePath(path).as_posix())
+
+    # due to possible spaces in Windows folder paths
+    path = "\"" + path + "\" "
+
+    return path
+
+
 def getJavaExe(sut):
 
     if not isJava(sut):
         raise Exception("ERROR: not a recognized JVM SUT: " + sut.platform)
 
-    if sut.platform == JDK_8:
-            JAVA = JAVA_HOME_8 +"/bin/java"
-    elif sut.platform == JDK_11:
-            JAVA = JAVA_HOME_11 +"/bin/java"
-    elif sut.platform == JDK_17:
-            JAVA = JAVA_HOME_17 +"/bin/java"
-    elif sut.platform == JDK_21:
-            JAVA = JAVA_HOME_21 +"/bin/java"
-    else:
-            raise Exception("ERROR: unhandled JVM version: " + sut.platform)
-
-    JAVA = str(pathlib.PurePath(JAVA).as_posix())
-
-    return JAVA
+    return getJavaExeByJDK(sut.platform)
 
 
 def getJavaCommand(sut):
 
     JAVA = getJavaExe(sut)
-    # due to possible spaces in Windows folder paths
-    JAVA = "\"" + JAVA + "\" "
-    if sut.platform == JDK_17 or sut.platform == JDK_21:
-        JAVA = JAVA + " --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED "
+
+    # TODO no longer needed?
+    # if sut.platform == JDK_17 or sut.platform == JDK_21:
+    #     JAVA = JAVA + " --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED "
 
     return JAVA
 
@@ -609,12 +617,11 @@ def addJobBody(port, sut, seed, setting, configName):
         # params += " --enableBasicAssertions=false" # TODO need to deal with flakiness
 
 
-    JAVA = getJavaCommand(sut)
+    JAVA = getJavaExeByJDK(JDK_21)
     command = JAVA + EVOMASTER_JAVA_OPTIONS + params + " >> " + em_log + " 2>&1"
 
     script.write("\n\necho \"Starting EvoMaster with: " + command + "\"\n")
     script.write("echo\n\n")
-
 
     script.write(command + " \n\n")
 
