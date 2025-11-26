@@ -104,7 +104,7 @@ public class EmbeddedEvoMasterController extends EmbeddedSutController {
 
     @Override
     public SutInfoDto.OutputFormat getPreferredOutputFormat() {
-        return SutInfoDto.OutputFormat.JAVA_JUNIT_5;
+        return SutInfoDto.OutputFormat.JAVA_JUNIT_4;
     }
 
     @Override
