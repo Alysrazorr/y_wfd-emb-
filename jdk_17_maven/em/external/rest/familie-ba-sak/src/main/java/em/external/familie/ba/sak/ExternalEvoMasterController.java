@@ -373,9 +373,11 @@ public class ExternalEvoMasterController extends ExternalSutController {
         x.setExpectCookies(false);
 
         TokenHandling token = new TokenHandling();
-        token.setHeaderPrefix("Bearer ");
-        token.setHttpHeaderName("Authorization");
-        token.setExtractFromField("/access_token");
+        token.setSendTemplate("Bearer {token}");
+        token.setSendName("Authorization");
+        token.setSendIn(TokenHandling.SendIn.HEADER);
+        token.setExtractSelector("/access_token");
+        token.setExtractFrom(TokenHandling.ExtractFrom.BODY);
         x.setToken(token);
 
         return dto;
