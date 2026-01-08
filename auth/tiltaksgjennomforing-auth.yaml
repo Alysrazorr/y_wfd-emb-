@@ -21,6 +21,8 @@ authTemplate:
     verb: POST
     contentType: application/x-www-form-urlencoded
     token:
-      extractFromField: /access_token
-      httpHeaderName: Authorization
-      headerPrefix: "Bearer "
+      extractFrom: body
+      extractSelector: /access_token
+      sendName: Authorization
+      sendIn: header
+      sendTemplate: "Bearer {token}"

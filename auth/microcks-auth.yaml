@@ -12,6 +12,8 @@ authTemplate:
     externalEndpointURL: "http://localhost:8081/realms/microcks/protocol/openid-connect/token"
     contentType: application/x-www-form-urlencoded
     token:
-      extractFromField: /access_token
-      httpHeaderName: Authorization
-      headerPrefix: "Bearer "
+      extractFrom: body
+      extractSelector: /access_token
+      sendName: Authorization
+      sendIn: header
+      sendTemplate: "Bearer {token}"

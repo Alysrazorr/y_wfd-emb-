@@ -15,6 +15,8 @@ authTemplate:
         verb: POST
         contentType: application/json
         token:
-            extractFromField: /accessToken
-            httpHeaderName: Authorization
-            headerPrefix: "Bearer "
+            extractFrom: body
+            extractSelector: /accessToken
+            sendName: Authorization
+            sendIn: header
+            sendTemplate: "Bearer {token}"
