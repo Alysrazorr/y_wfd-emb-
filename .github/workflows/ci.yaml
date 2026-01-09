@@ -43,7 +43,8 @@ jobs:
       - name: Setup JDK for EvoMaster
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          # client library is on 8, but, to build whole EM, need higher.
+          java-version: 17
       - name: Checkout EvoMaster
         uses: actions/checkout@v4
         with:
