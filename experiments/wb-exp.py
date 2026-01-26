@@ -616,6 +616,7 @@ def addJobBody(port, sut, seed, setting, configName):
         params += " --jaCoCoOutputFile="+str(pathlib.PurePath(os.path.abspath("./exec/"+sut.name+"__wb"+configName+"__"+str(port)+"__jacoco.exec")).as_posix())
         # params += " --enableBasicAssertions=false" # TODO need to deal with flakiness
 
+    params += fixedCustomParams()
 
     JAVA = getJavaExeByJDK(JDK_21)
     command = JAVA + EVOMASTER_JAVA_OPTIONS + params + " >> " + em_log + " 2>&1"
@@ -776,6 +777,13 @@ def is_float(input):
 ### Following will need to be changed based on what kind of experiments
 ### we want to run.
 ############################################################################
+
+def fixedCustomParams():
+    #  new, extra custom params that applies to ALL experiments
+    params = ""
+    # params += " --useExperimentalOracles true"
+    return params
+
 
 def getConfigs():
 
