@@ -312,6 +312,11 @@ os.makedirs(SCRIPT_DIR)
 TEST_DIR = BASE_DIR + "/tests"
 os.makedirs(TEST_DIR)
 
+### NOTE: this function MUST be kept in sync between wb-exp.py and bb-exp.py
+def getTestDir(tool,sutname,port):
+    return pathlib.PurePath(TESTS_DIR + "/"+ tool  + "/" + sutname + "/" + str(port)).as_posix()
+
+
 ALL_LOGS = LOGS_DIR + "/logs"
 #We might end up generating gigas of log files. So, at each new experiments, we delete previous logs
 shutil.rmtree(ALL_LOGS, ignore_errors=True)
@@ -594,7 +599,7 @@ def addJobBody(port, sut, seed, setting, configName):
     params += " --statisticsColumnId=" + sut.name
     params += " --seed=" + str(seed)
     params += " --sutControllerPort=" + str(port)
-    params += " --outputFolder=" + TEST_DIR + "/" + sut.name
+    params += " --outputFolder=" + getTestDir(configName,sut.name,port)
     params += " --statisticsFile=" + REPORT_DIR + "/statistics" + identifier + ".csv"
     params += " --snapshotInterval=5"
     params += " --snapshotStatisticsFile=" + REPORT_DIR + "/snapshot" + identifier + ".csv"
