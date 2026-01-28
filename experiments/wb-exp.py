@@ -309,8 +309,8 @@ os.makedirs(REPORT_DIR)
 SCRIPT_DIR = BASE_DIR + "/scripts"
 os.makedirs(SCRIPT_DIR)
 
-TEST_DIR = BASE_DIR + "/tests"
-os.makedirs(TEST_DIR)
+TESTS_DIR = BASE_DIR + "/tests"
+os.makedirs(TESTS_DIR)
 
 ### NOTE: this function MUST be kept in sync between wb-exp.py and bb-exp.py
 def getTestDir(tool,sutname,port):
@@ -328,7 +328,7 @@ CONTROLLER_PID = "CONTROLLER_PID"
 
 REPORT_DIR = str(pathlib.PurePath(REPORT_DIR).as_posix())
 SCRIPT_DIR = str(pathlib.PurePath(SCRIPT_DIR).as_posix())
-TEST_DIR = str(pathlib.PurePath(TEST_DIR).as_posix())
+TESTS_DIR = str(pathlib.PurePath(TESTS_DIR).as_posix())
 LOG_DIR = str(pathlib.PurePath(LOG_DIR).as_posix())
 
 #Due to Windows limitations (ie crappy FS), we need to copy JARs over

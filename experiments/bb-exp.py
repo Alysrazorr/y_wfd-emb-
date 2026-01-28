@@ -350,7 +350,7 @@ SCHEMATHESIS="schemathesis"
 RESTLER="restler"
 EMREST="emrest"
 
-
+### NOTE: this function MUST be kept in sync between wb-exp.py and bb-exp.py
 def getTestDir(tool,sutname,port):
     return pathlib.PurePath(TESTS_DIR + "/"+ tool  + "/" + sutname + "/" + str(port)).as_posix()
 
