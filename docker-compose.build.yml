@@ -81,12 +81,10 @@ services:
       - ./jdk_8_gradle:/build/jdk_8_gradle
     working_dir: /build/jdk_8_gradle
     command: >
-      bash -c "gradle build -x test -x spotlessCheck -x spotlessJavaCheck &&
+      bash -c "gradle build -x test &&
                cp cs/rest/erc20-rest-service/build/libs/erc20-rest-service-sut.jar /dist/ &&
                cp em/external/rest/erc20-rest-service/build/libs/erc20-rest-service-evomaster-runner.jar /dist/ &&
                echo 'JDK 8 Gradle build completed'"
-    depends_on:
-      - build-jdk8-maven
 
   build-jdk11-maven:
     build:
@@ -136,8 +134,6 @@ services:
                cp cs/rest/reservations-api/build/libs/reservations-api-sut.jar /dist/ &&
                cp em/external/rest/reservations-api/build/libs/reservations-api-evomaster-runner.jar /dist/ &&
                echo 'JDK 11 Gradle build completed'"
-    depends_on:
-      - build-jdk11-maven
 
   build-jdk17-maven:
     build:
@@ -183,8 +179,6 @@ services:
                cp cs/rest/bibliothek/build/libs/bibliothek-sut.jar /dist/ &&
                cp em/external/rest/bibliothek/build/libs/bibliothek-evomaster-runner.jar /dist/ &&
                echo 'JDK 17 Gradle build completed'"
-    depends_on:
-      - build-jdk17-maven
 
   build-jdk21-maven:
     build:
@@ -219,5 +213,3 @@ services:
              cp /jacoco/jacocoagent.jar /dist/ &&
              cp /jacoco/jacococli.jar /dist/ &&
              echo 'Additional files copied'"
-    depends_on:
-      - build-jdk21-maven

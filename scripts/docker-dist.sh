@@ -10,23 +10,44 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJ_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Parse arguments
-JDK_VERSION="${1:-all}"
-BUILD_TOOL="${2:-all}"
+PARALLEL_MODE=false
+JDK_VERSION=""
+BUILD_TOOL=""
+
+# Check for parallel flag
+for arg in "$@"; do
+    if [[ "$arg" == "--parallel" ]] || [[ "$arg" == "-p" ]]; then
+        PARALLEL_MODE=true
+    else
+        if [ -z "$JDK_VERSION" ]; then
+            JDK_VERSION="$arg"
+        elif [ -z "$BUILD_TOOL" ]; then
+            BUILD_TOOL="$arg"
+        fi
+    fi
+done
+
+# Set defaults
+JDK_VERSION="${JDK_VERSION:-all}"
+BUILD_TOOL="${BUILD_TOOL:-all}"
 
 # Function to display usage
 usage() {
-    echo "Usage: $0 [JDK_VERSION] [BUILD_TOOL]"
+    echo "Usage: $0 [JDK_VERSION] [BUILD_TOOL] [OPTIONS]"
     echo ""
     echo "Arguments:"
     echo "  JDK_VERSION  : 8, 11, 17, 21, or 'all' (default: all)"
     echo "  BUILD_TOOL   : maven, gradle, or 'all' (default: all)"
     echo ""
+    echo "Options:"
+    echo "  --parallel, -p : Run builds in parallel (faster but uses more resources)"
+    echo ""
     echo "Examples:"
-    echo "  $0               # Build all projects"
-    echo "  $0 8 gradle      # Build only JDK 8 Gradle projects"
-    echo "  $0 11 maven      # Build only JDK 11 Maven projects"
-    echo "  $0 17 all        # Build all JDK 17 projects (Maven + Gradle)"
-    echo "  $0 all maven     # Build all Maven projects"
+    echo "  $0                    # Build all projects sequentially"
+    echo "  $0 --parallel         # Build all projects in parallel"
+    echo "  $0 8 gradle           # Build only JDK 8 Gradle projects"
+    echo "  $0 11 maven -p        # Build JDK 11 Maven in parallel mode"
+    echo "  $0 all all --parallel # Build everything in parallel"
     echo ""
     exit 1
 }
@@ -53,6 +74,7 @@ echo "========================================"
 echo "Project directory: $PROJ_DIR"
 echo "JDK Version: $JDK_VERSION"
 echo "Build Tool: $BUILD_TOOL"
+echo "Mode: $([ "$PARALLEL_MODE" = true ] && echo "PARALLEL ⚡" || echo "Sequential")"
 echo ""
 
 # Check if Docker is installed
@@ -174,88 +196,114 @@ echo "========================================"
 echo ""
 
 BUILDS_RUN=0
+SERVICES_TO_BUILD=()
 
-# Build JDK 8 Maven
+# Collect services to build
 if should_build "8" "maven" && service_exists "8" "maven"; then
-    echo "Step: Building Docker image for JDK 8..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml build build-jdk8-maven
-    echo ""
-    echo ">>> Building JDK 8 Maven projects..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml run --rm build-jdk8-maven
-    BUILDS_RUN=$((BUILDS_RUN + 1))
-    echo ""
+    SERVICES_TO_BUILD+=("build-jdk8-maven")
 fi
 
-# Build JDK 8 Gradle
 if should_build "8" "gradle" && service_exists "8" "gradle"; then
-    echo "Step: Building Docker image for JDK 8..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml build build-jdk8-gradle
-    echo ""
-    echo ">>> Building JDK 8 Gradle projects..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml run --rm build-jdk8-gradle
-    BUILDS_RUN=$((BUILDS_RUN + 1))
-    echo ""
+    SERVICES_TO_BUILD+=("build-jdk8-gradle")
 fi
 
-# Build JDK 11 Maven
 if should_build "11" "maven" && service_exists "11" "maven"; then
-    echo "Step: Building Docker image for JDK 11..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml build build-jdk11-maven
-    echo ""
-    echo ">>> Building JDK 11 Maven projects..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml run --rm build-jdk11-maven
-    BUILDS_RUN=$((BUILDS_RUN + 1))
-    echo ""
+    SERVICES_TO_BUILD+=("build-jdk11-maven")
 fi
 
-# Build JDK 11 Gradle
 if should_build "11" "gradle" && service_exists "11" "gradle"; then
-    echo "Step: Building Docker image for JDK 11..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml build build-jdk11-gradle
-    echo ""
-    echo ">>> Building JDK 11 Gradle projects..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml run --rm build-jdk11-gradle
-    BUILDS_RUN=$((BUILDS_RUN + 1))
-    echo ""
+    SERVICES_TO_BUILD+=("build-jdk11-gradle")
 fi
 
-# Build JDK 17 Maven
 if should_build "17" "maven" && service_exists "17" "maven"; then
-    echo "Step: Building Docker image for JDK 17..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml build build-jdk17-maven
-    echo ""
-    echo ">>> Building JDK 17 Maven projects..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml run --rm build-jdk17-maven
-    BUILDS_RUN=$((BUILDS_RUN + 1))
-    echo ""
+    SERVICES_TO_BUILD+=("build-jdk17-maven")
 fi
 
-# Build JDK 17 Gradle
 if should_build "17" "gradle" && service_exists "17" "gradle"; then
-    echo "Step: Building Docker image for JDK 17..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml build build-jdk17-gradle
-    echo ""
-    echo ">>> Building JDK 17 Gradle projects..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml run --rm build-jdk17-gradle
-    BUILDS_RUN=$((BUILDS_RUN + 1))
-    echo ""
+    SERVICES_TO_BUILD+=("build-jdk17-gradle")
 fi
 
-# Build JDK 21 Maven
 if should_build "21" "maven" && service_exists "21" "maven"; then
-    echo "Step: Building Docker image for JDK 21..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml build build-jdk21-maven
+    SERVICES_TO_BUILD+=("build-jdk21-maven")
+fi
+
+BUILDS_RUN=${#SERVICES_TO_BUILD[@]}
+
+if [ $BUILDS_RUN -eq 0 ]; then
+    echo "No services to build!"
+else
+    echo "Services to build: ${SERVICES_TO_BUILD[@]}"
     echo ""
-    echo ">>> Building JDK 21 Maven projects..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml run --rm build-jdk21-maven
-    BUILDS_RUN=$((BUILDS_RUN + 1))
+
+    # Build Docker images first
+    echo "Step 1: Building Docker images..."
+    UNIQUE_IMAGES=($(printf '%s\n' "${SERVICES_TO_BUILD[@]}" | sed 's/-maven$//' | sed 's/-gradle$//' | sort -u))
+    for service in "${SERVICES_TO_BUILD[@]}"; do
+        $DOCKER_COMPOSE -f docker-compose.build.yml build "$service" &
+    done
+    wait
+    echo "All Docker images built!"
     echo ""
+
+    # Run builds
+    echo "Step 2: Running builds..."
+    if [ "$PARALLEL_MODE" = true ]; then
+        echo ">>> Running builds in PARALLEL mode..."
+        echo ">>> WARNING: This will use significant CPU and RAM!"
+        echo ""
+
+        # Start all builds in background
+        PIDS=()
+        for service in "${SERVICES_TO_BUILD[@]}"; do
+            echo "Starting: $service"
+            $DOCKER_COMPOSE -f docker-compose.build.yml run --rm -T "$service" &
+            PIDS+=($!)
+        done
+
+        echo ""
+        echo "Waiting for all builds to complete..."
+
+        # Wait for all background processes
+        FAILED=0
+        for i in "${!PIDS[@]}"; do
+            wait "${PIDS[$i]}"
+            EXIT_CODE=$?
+            if [ $EXIT_CODE -ne 0 ]; then
+                echo "ERROR: ${SERVICES_TO_BUILD[$i]} failed with exit code $EXIT_CODE"
+                FAILED=$((FAILED + 1))
+            fi
+        done
+
+        if [ $FAILED -gt 0 ]; then
+            echo ""
+            echo "ERROR: $FAILED build(s) failed!"
+            exit 1
+        fi
+
+        echo ""
+        echo "All parallel builds completed successfully!"
+    else
+        echo ">>> Running builds in SEQUENTIAL mode..."
+        echo ""
+
+        # Run builds one by one
+        for service in "${SERVICES_TO_BUILD[@]}"; do
+            echo ">>> Building: $service"
+            $DOCKER_COMPOSE -f docker-compose.build.yml run --rm -T "$service"
+            if [ $? -ne 0 ]; then
+                echo ""
+                echo "ERROR: $service build failed!"
+                exit 1
+            fi
+            echo ""
+        done
+    fi
 fi
 
 # Copy additional files if any build was run
 if [ $BUILDS_RUN -gt 0 ]; then
     echo ">>> Copying additional files (evomaster-agent, jacoco)..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml run --rm copy-additional-files
+    $DOCKER_COMPOSE -f docker-compose.build.yml run --rm -T copy-additional-files
     echo ""
 fi
 
