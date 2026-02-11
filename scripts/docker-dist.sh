@@ -11,13 +11,16 @@ PROJ_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Parse arguments
 PARALLEL_MODE=false
+COPY_ONLY=false
 JDK_VERSION=""
 BUILD_TOOL=""
 
-# Check for parallel flag
+# Check for flags
 for arg in "$@"; do
     if [[ "$arg" == "--parallel" ]] || [[ "$arg" == "-p" ]]; then
         PARALLEL_MODE=true
+    elif [[ "$arg" == "--copy-files" ]] || [[ "$arg" == "-c" ]]; then
+        COPY_ONLY=true
     else
         if [ -z "$JDK_VERSION" ]; then
             JDK_VERSION="$arg"
@@ -40,7 +43,8 @@ usage() {
     echo "  BUILD_TOOL   : maven, gradle, or 'all' (default: all)"
     echo ""
     echo "Options:"
-    echo "  --parallel, -p : Run builds in parallel (faster but uses more resources)"
+    echo "  --parallel, -p    : Run builds in parallel (faster but uses more resources)"
+    echo "  --copy-files, -c  : Only copy additional files (evomaster-agent, jacoco)"
     echo ""
     echo "Examples:"
     echo "  $0                    # Build all projects sequentially"
@@ -48,6 +52,7 @@ usage() {
     echo "  $0 8 gradle           # Build only JDK 8 Gradle projects"
     echo "  $0 11 maven -p        # Build JDK 11 Maven in parallel mode"
     echo "  $0 all all --parallel # Build everything in parallel"
+    echo "  $0 --copy-files       # Only copy evomaster-agent and jacoco files"
     echo ""
     exit 1
 }
@@ -98,6 +103,41 @@ fi
 
 echo "Using: $DOCKER_COMPOSE"
 echo ""
+
+# If only copying files, do that and exit
+if [ "$COPY_ONLY" = true ]; then
+    echo "========================================"
+    echo "Copy Additional Files Only Mode"
+    echo "========================================"
+    echo ""
+
+    mkdir -p "$PROJ_DIR/dist"
+
+    echo "Copying additional files (evomaster-agent, jacoco)..."
+    $DOCKER_COMPOSE -f docker-compose.build.yml run --rm -T copy-additional-files
+
+    echo ""
+    echo "========================================"
+    echo "Files copied successfully!"
+    echo "========================================"
+
+    if [ -f "$PROJ_DIR/dist/evomaster-agent.jar" ]; then
+        echo "evomaster-agent.jar"
+        ls -lh "$PROJ_DIR/dist/evomaster-agent.jar"
+    fi
+
+    if [ -f "$PROJ_DIR/dist/jacocoagent.jar" ]; then
+        echo "jacocoagent.jar"
+        ls -lh "$PROJ_DIR/dist/jacocoagent.jar"
+    fi
+
+    if [ -f "$PROJ_DIR/dist/jacococli.jar" ]; then
+        echo "jacococli.jar"
+        ls -lh "$PROJ_DIR/dist/jacococli.jar"
+    fi
+
+    exit 0
+fi
 
 # Clean dist folder only if building all projects
 if [ "$JDK_VERSION" == "all" ] && [ "$BUILD_TOOL" == "all" ]; then
@@ -282,6 +322,7 @@ else
 
         echo ""
         echo "All parallel builds completed successfully!"
+        echo ""
     else
         echo ">>> Running builds in SEQUENTIAL mode..."
         echo ""
@@ -298,12 +339,14 @@ else
             echo ""
         done
     fi
-fi
 
-# Copy additional files if any build was run
-if [ $BUILDS_RUN -gt 0 ]; then
-    echo ">>> Copying additional files (evomaster-agent, jacoco)..."
+    # Copy additional files after all builds
+    echo "========================================"
+    echo "Copying Additional Files"
+    echo "========================================"
+    echo ">>> Copying evomaster-agent and jacoco files to dist..."
     $DOCKER_COMPOSE -f docker-compose.build.yml run --rm -T copy-additional-files
+    echo "Additional files copied!"
     echo ""
 fi
 
