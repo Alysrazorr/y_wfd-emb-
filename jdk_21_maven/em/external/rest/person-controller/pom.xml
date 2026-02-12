@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>evomaster-benchmark-jdk21-em-external-rest-gestaohospital</artifactId>
+    <artifactId>evomaster-benchmark-jdk21-em-external-rest-person-controller</artifactId>
     <packaging>jar</packaging>
 
     <parent>
