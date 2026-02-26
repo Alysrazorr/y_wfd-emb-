@@ -46,7 +46,7 @@ MAX_TIME_SECONDS = 3600
 TIMEOUT_BIN = shutil.which("timeout") or shutil.which("gtimeout")
 if TIMEOUT_BIN is None:
     raise Exception("Neither 'timeout' nor 'gtimeout' command found. On macOS, please run: 'brew install coreutils'")
-TIMEOUT_COMMAND = f"{TIMEOUT_BIN} 90m "
+TIMEOUT_COMMAND = f"\"{TIMEOUT_BIN}\" 90m "
 
 if not os.path.isdir(BASE_DIR):
     print("creating folder: " + BASE_DIR)
