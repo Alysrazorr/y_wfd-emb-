@@ -114,7 +114,7 @@ if [ "$COPY_ONLY" = true ]; then
     mkdir -p "$PROJ_DIR/dist"
 
     echo "Copying additional files (evomaster-agent, jacoco)..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml run --rm -T copy-additional-files
+    $DOCKER_COMPOSE -f ./scripts/build/docker-compose.build.yml run --rm -T copy-additional-files
 
     echo ""
     echo "========================================"
@@ -163,8 +163,8 @@ if [ "$JDK_VERSION" == "all" ] && [ "$BUILD_TOOL" == "all" ]; then
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo ""
         echo "Build cancelled by user."
-        echo "Tip: Use './scripts/docker-dist.sh <JDK> <TOOL>' for incremental builds"
-        echo "     Example: ./scripts/docker-dist.sh 8 gradle"
+        echo "Tip: Use './scripts/dist-docker.sh <JDK> <TOOL>' for incremental builds"
+        echo "     Example: ./scripts/dist-docker.sh 8 gradle"
         exit 0
     fi
 
@@ -279,7 +279,7 @@ else
     echo "Step 1: Building Docker images..."
     UNIQUE_IMAGES=($(printf '%s\n' "${SERVICES_TO_BUILD[@]}" | sed 's/-maven$//' | sed 's/-gradle$//' | sort -u))
     for service in "${SERVICES_TO_BUILD[@]}"; do
-        $DOCKER_COMPOSE -f docker-compose.build.yml build "$service" &
+        $DOCKER_COMPOSE -f ./scripts/build/docker-compose.build.yml build "$service" &
     done
     wait
     echo "All Docker images built!"
@@ -296,7 +296,7 @@ else
         PIDS=()
         for service in "${SERVICES_TO_BUILD[@]}"; do
             echo "Starting: $service"
-            $DOCKER_COMPOSE -f docker-compose.build.yml run --rm -T "$service" &
+            $DOCKER_COMPOSE -f ./scripts/build/docker-compose.build.yml run --rm -T "$service" &
             PIDS+=($!)
         done
 
@@ -330,7 +330,7 @@ else
         # Run builds one by one
         for service in "${SERVICES_TO_BUILD[@]}"; do
             echo ">>> Building: $service"
-            $DOCKER_COMPOSE -f docker-compose.build.yml run --rm -T "$service"
+            $DOCKER_COMPOSE -f ./scripts/build/docker-compose.build.yml run --rm -T "$service"
             if [ $? -ne 0 ]; then
                 echo ""
                 echo "ERROR: $service build failed!"
@@ -345,7 +345,7 @@ else
     echo "Copying Additional Files"
     echo "========================================"
     echo ">>> Copying evomaster-agent and jacoco files to dist..."
-    $DOCKER_COMPOSE -f docker-compose.build.yml run --rm -T copy-additional-files
+    $DOCKER_COMPOSE -f ./scripts/build/docker-compose.build.yml run --rm -T copy-additional-files
     echo "Additional files copied!"
     echo ""
 fi
@@ -353,7 +353,7 @@ fi
 echo "========================================"
 echo "Cleaning up Docker containers..."
 echo "========================================"
-$DOCKER_COMPOSE -f docker-compose.build.yml down
+$DOCKER_COMPOSE -f ./scripts/build/docker-compose.build.yml down
 
 echo ""
 echo "========================================"

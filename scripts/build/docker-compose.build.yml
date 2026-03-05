@@ -8,8 +8,8 @@ services:
     image: emb-build-jdk8
     volumes:
       - ${HOME}/.m2:/root/.m2
-      - ./dist:/dist
-      - ./jdk_8_maven:/build/jdk_8_maven
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_8_MVN_FOLDER}:/build/jdk_8_maven
     working_dir: /build/jdk_8_maven
     command: >
       bash -c "mvn clean install -DskipTests &&
@@ -77,8 +77,8 @@ services:
     volumes:
       - ${HOME}/.m2:/root/.m2
       - ${HOME}/.gradle:/root/.gradle
-      - ./dist:/dist
-      - ./jdk_8_gradle:/build/jdk_8_gradle
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_8_GRADLE_FOLDER}:/build/jdk_8_gradle
     working_dir: /build/jdk_8_gradle
     command: >
       bash -c "gradle build -x test &&
@@ -93,8 +93,8 @@ services:
     image: emb-build-jdk11
     volumes:
       - ${HOME}/.m2:/root/.m2
-      - ./dist:/dist
-      - ./jdk_11_maven:/build/jdk_11_maven
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_11_MVN_FOLDER}:/build/jdk_11_maven
     working_dir: /build/jdk_11_maven
     command: >
       bash -c "mvn clean install -DskipTests &&
@@ -124,8 +124,8 @@ services:
     volumes:
       - ${HOME}/.m2:/root/.m2
       - ${HOME}/.gradle:/root/.gradle
-      - ./dist:/dist
-      - ./jdk_11_gradle:/build/jdk_11_gradle
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_11_GRADLE_FOLDER}:/build/jdk_11_gradle
     working_dir: /build/jdk_11_gradle
     command: >
       bash -c "gradle build -x test -x spotlessCheck -x spotlessJavaCheck &&
@@ -142,8 +142,8 @@ services:
     image: emb-build-jdk17
     volumes:
       - ${HOME}/.m2:/root/.m2
-      - ./dist:/dist
-      - ./jdk_17_maven:/build/jdk_17_maven
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_17_MVN_FOLDER}:/build/jdk_17_maven
     working_dir: /build/jdk_17_maven
     command: >
       bash -c "mvn clean install -DskipTests &&
@@ -171,8 +171,8 @@ services:
     volumes:
       - ${HOME}/.m2:/root/.m2
       - ${HOME}/.gradle:/root/.gradle
-      - ./dist:/dist
-      - ./jdk_17_gradle:/build/jdk_17_gradle
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_17_GRADLE_FOLDER}:/build/jdk_17_gradle
     working_dir: /build/jdk_17_gradle
     command: >
       bash -c "gradle build -x test -x spotlessCheck -x spotlessJavaCheck &&
@@ -187,8 +187,8 @@ services:
     image: emb-build-jdk21
     volumes:
       - ${HOME}/.m2:/root/.m2
-      - ./dist:/dist
-      - ./jdk_21_maven:/build/jdk_21_maven
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_21_MVN_FOLDER}:/build/jdk_21_maven
     working_dir: /build/jdk_21_maven
     command: >
       bash -c "mvn clean install -DskipTests &&
@@ -206,10 +206,10 @@ services:
     image: alpine:latest
     volumes:
       - ${HOME}/.m2:/root/.m2
-      - ./dist:/dist
-      - ./jacoco:/jacoco
+      - ${DIST_FOLDER}:/dist
+      - ${JACOCO_FOLDER}:/jacoco
     command: >
-      sh -c "cp /root/.m2/repository/org/evomaster/evomaster-client-java-instrumentation/5.0.3-SNAPSHOT/evomaster-client-java-instrumentation-5.0.3-SNAPSHOT.jar /dist/evomaster-agent.jar &&
+      sh -c "cp /root/.m2/repository/org/evomaster/evomaster-client-java-instrumentation/${EVOMASTER_VERSION}/evomaster-client-java-instrumentation-${EVOMASTER_VERSION}.jar /dist/evomaster-agent.jar &&
              cp /jacoco/jacocoagent.jar /dist/ &&
              cp /jacoco/jacococli.jar /dist/ &&
              echo 'Additional files copied'"
