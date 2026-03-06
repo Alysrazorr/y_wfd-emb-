@@ -128,7 +128,7 @@ services:
       - ${JDK_11_GRADLE_FOLDER}:/build/jdk_11_gradle
     working_dir: /build/jdk_11_gradle
     command: >
-      bash -c "gradle build -x test -x spotlessCheck -x spotlessJavaCheck &&
+      bash -c "gradle build -x test &&
                cp cs/graphql/patio-api/build/libs/patio-api-sut.jar /dist/ &&
                cp em/external/graphql/patio-api/build/libs/patio-api-evomaster-runner.jar /dist/ &&
                cp cs/rest/reservations-api/build/libs/reservations-api-sut.jar /dist/ &&
