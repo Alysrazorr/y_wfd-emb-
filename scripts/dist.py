@@ -302,7 +302,7 @@ def call_gradle(java_home, folder):
 
     command = "gradlew"
 
-    if platform.system() == "Darwin":
+    if platform.system() in ["Darwin", "Linux"]:
         # make sure gradlew command is executable
         os.system("chmod +x " + os.getcwd() + "/" + folder + "/gradlew")
 
