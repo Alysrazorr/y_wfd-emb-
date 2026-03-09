@@ -58,7 +58,7 @@ def checkDocker():
         # So must make sure to clean up any un-used ones.
         # Had issues where previous experiments did not clean up properly, and all new failed for
         # lack of available networks
-        print("Going to prune all unused networks ('docker network prune -f').", result.stderr, file=sys.stderr, flush=True)
+        print("Going to prune all unused networks ('docker network prune -f').", flush=True)
         result = subprocess.run(
             ['docker', 'network', 'prune', '-f'],
             stdout=subprocess.PIPE,
@@ -74,7 +74,7 @@ def checkDocker():
         print("Error: Docker is not installed or not in PATH", file=sys.stderr, flush=True)
         sys.exit(1)
     except Exception as e:
-        print(f"Unexpected error checking Docker status: {str(e)}", file=sys.stderr, flush=True)
+        print(f"Unexpected error checking Docker: {str(e)}", file=sys.stderr, flush=True)
         sys.exit(1)
 
 checkDocker()
