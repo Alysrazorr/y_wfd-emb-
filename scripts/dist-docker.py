@@ -10,6 +10,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -45,6 +46,11 @@ def detect_compose_cmd():
         return ["docker-compose"]
     print("ERROR: Docker Compose is not installed")
     sys.exit(1)
+
+
+def fmt_elapsed(seconds):
+    m, s = divmod(int(seconds), 60)
+    return f"{m}m {s}s" if m else f"{s}s"
 
 
 def run(cmd, check=True):
@@ -248,49 +254,78 @@ def main():
     print("Building Docker images and running builds...")
     print(f"Services to build: {services}\n")
 
+    total = len(services)
+    build_start = time.time()
+
     # Step 1: Build Docker images in parallel (output suppressed to avoid interleaving)
-    print("Step 1: Building Docker images...")
-    procs = [
-        subprocess.Popen(
+    print(f"Step 1: Building {total} Docker image(s)...")
+    img_start = time.time()
+    img_pending = {}
+    for svc in services:
+        proc = subprocess.Popen(
             compose + ["-f", COMPOSE_FILE, "build", svc],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
-        for svc in services
-    ]
-    for p in procs:
-        p.wait()
-    print("All Docker images built!\n")
+        img_pending[svc] = (proc, time.time())
+    done = 0
+    while img_pending:
+        for svc, (proc, svc_start) in list(img_pending.items()):
+            if proc.poll() is not None:
+                done += 1
+                print(f"  [{done}/{total}] Image ready: {svc}  ({fmt_elapsed(time.time() - svc_start)})")
+                del img_pending[svc]
+        if img_pending:
+            time.sleep(2)
+    print(f"All Docker images built! (took {fmt_elapsed(time.time() - img_start)})\n")
 
     # Step 2: Run builds
+    step2_start = time.time()
     print("Step 2: Running builds...")
     if args.parallel:
         print(">>> Running builds in PARALLEL mode...")
-        print(">>> WARNING: This will use significant CPU and RAM!\n")
+        print(f">>> WARNING: This will use significant CPU and RAM!")
+        print(f">>> Launching {total} build(s)...\n")
 
-        procs = {svc: run_build(compose, svc, background=True, evomaster=args.evomaster) for svc in services}
-        print("Waiting for all builds to complete...")
+        pending = {}
+        for svc in services:
+            proc = run_build(compose, svc, background=True, evomaster=args.evomaster)
+            pending[svc] = (proc, time.time())
+            print(f"  [launched] {svc}")
+        print(f"\nWaiting for all {total} builds to complete...\n")
 
         failed = 0
-        for svc, proc in procs.items():
-            code = proc.wait()
-            if code != 0:
-                print(f"ERROR: {svc} failed with exit code {code}")
-                failed += 1
+        done = 0
+        while pending:
+            for svc, (proc, svc_start) in list(pending.items()):
+                code = proc.poll()
+                if code is not None:
+                    done += 1
+                    svc_elapsed = fmt_elapsed(time.time() - svc_start)
+                    if code != 0:
+                        print(f"  [{done}/{total}] FAILED: {svc}  (exit code {code}, {svc_elapsed})")
+                        failed += 1
+                    else:
+                        print(f"  [{done}/{total}] OK: {svc}  ({svc_elapsed})")
+                    del pending[svc]
+            if pending:
+                time.sleep(2)
 
         if failed:
             print(f"\nERROR: {failed} build(s) failed!")
             sys.exit(1)
 
-        print("\nAll parallel builds completed successfully!\n")
+        print(f"\nAll parallel builds completed successfully! (took {fmt_elapsed(time.time() - step2_start)})\n")
     else:
         print(">>> Running builds in SEQUENTIAL mode...\n")
-        for svc in services:
-            print(f">>> Building: {svc}")
+        for i, svc in enumerate(services, 1):
+            print(f">>> [{i}/{total}] Building: {svc}")
+            svc_start = time.time()
             result = run_build(compose, svc, evomaster=args.evomaster)
+            svc_elapsed = fmt_elapsed(time.time() - svc_start)
             if result.returncode != 0:
-                print(f"\nERROR: {svc} build failed!")
+                print(f"\nERROR: {svc} build failed! (after {svc_elapsed})")
                 sys.exit(1)
-            print()
+            print(f"    Completed in {svc_elapsed}\n")
 
     if args.evomaster:
         copy_additional_files(compose)
@@ -300,9 +335,11 @@ def main():
     run(compose + ["-f", COMPOSE_FILE, "down"])
 
     # Summary
+    total_elapsed = fmt_elapsed(time.time() - build_start)
     print()
     print("Build Summary")
     print(f"Builds executed: {len(services)}")
+    print(f"Total time: {total_elapsed}")
     print("Checking dist folder contents...\n")
 
     jar_count = count_jars()
