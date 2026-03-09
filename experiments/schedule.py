@@ -53,6 +53,22 @@ def checkDocker():
         if result.returncode != 0:
             print("Docker is not running. Error:", result.stderr, file=sys.stderr, flush=True)
             sys.exit(1)
+
+        # Unfortunately it seems by default Docker has very low network count...
+        # So must make sure to clean up any un-used ones.
+        # Had issues where previous experiments did not clean up properly, and all new failed for
+        # lack of available networks
+        print("Going to prune all unused networks ('docker network prune -f').", result.stderr, file=sys.stderr, flush=True)
+        result = subprocess.run(
+            ['docker', 'network', 'prune', '-f'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        if result.returncode != 0:
+            print("Failed to prune networks. Error:", result.stderr, file=sys.stderr, flush=True)
+            sys.exit(1)
+
         return True
     except FileNotFoundError:
         print("Error: Docker is not installed or not in PATH", file=sys.stderr, flush=True)
