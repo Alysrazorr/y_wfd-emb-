@@ -1,0 +1,326 @@
+#!/usr/bin/env python3
+"""Docker-based build script for WFD project.
+
+Builds all jdk_* projects using Docker containers
+and copies the results to the dist folder.
+"""
+
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJ_DIR = SCRIPT_DIR.parent
+
+COMPOSE_FILE = "./scripts/build/docker-compose.build.yml"
+
+JDK_VERSIONS = ["8", "11", "17", "21"]
+BUILD_TOOLS = ["maven", "gradle"]
+
+ALL_SERVICES = [
+    ("8",  "maven"),
+    ("8",  "gradle"),
+    ("11", "maven"),
+    ("11", "gradle"),
+    ("17", "maven"),
+    ("17", "gradle"),
+    ("21", "maven"),
+]
+
+
+def detect_compose_cmd():
+    try:
+        subprocess.run(
+            ["docker", "compose", "version"],
+            check=True, capture_output=True,
+        )
+        return ["docker", "compose"]
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    if shutil.which("docker-compose"):
+        return ["docker-compose"]
+    print("ERROR: Docker Compose is not installed")
+    sys.exit(1)
+
+
+def run(cmd, check=True):
+    return subprocess.run(cmd, check=check)
+
+
+def run_build(compose, service, *, background=False, evomaster=False):
+    env_args = ["-e", "BUILD_EVOMASTER=true"] if evomaster else []
+    cmd = compose + ["-f", COMPOSE_FILE, "run", "--rm", "-T"] + env_args + [service]
+    if background:
+        return subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return subprocess.run(cmd, check=False)
+
+
+def copy_additional_files(compose):
+    print("Copying Additional Files")
+    print(">>> Copying evomaster-agent and jacoco files to dist...")
+    run(compose + ["-f", COMPOSE_FILE, "run", "--rm", "-T", "copy-additional-files"])
+    print("Additional files copied!\n")
+
+
+def show_jar(path):
+    p = PROJ_DIR / "dist" / path
+    if p.exists():
+        print(f"{p.name}  ({p.stat().st_size // 1024} KB)")
+
+
+def count_jars():
+    return len(list((PROJ_DIR / "dist").glob("**/*.jar")))
+
+
+def service_dir_exists(jdk, tool):
+    return (PROJ_DIR / f"jdk_{jdk}_{tool}").is_dir()
+
+
+def should_build(jdk, tool, jdk_filter, tool_filter):
+    if jdk_filter != "all" and jdk_filter != jdk:
+        return False
+    if tool_filter != "all" and tool_filter != tool:
+        return False
+    return True
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="WFD Docker Build Script",
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=(
+            "Examples:\n"
+            "  dist-docker.py                    # Build all projects sequentially\n"
+            "  dist-docker.py --parallel         # Build all projects in parallel\n"
+            "  dist-docker.py 8 gradle           # Build only JDK 8 Gradle projects\n"
+            "  dist-docker.py 11 maven -p        # Build JDK 11 Maven in parallel mode\n"
+            "  dist-docker.py --copy-files       # Only copy evomaster-agent and jacoco files\n"
+            "  dist-docker.py --interactive      # Prompt before deleting dist/ on full build\n"
+            "  dist-docker.py --evomaster        # Also build evomaster runners (full build)\n"
+            "  dist-docker.py -E --parallel      # Full build in parallel"
+        ),
+    )
+    parser.add_argument(
+        "jdk_version",
+        nargs="?",
+        default="all",
+        metavar="JDK_VERSION",
+        help="8, 11, 17, 21, or 'all' (default: all)",
+    )
+    parser.add_argument(
+        "build_tool",
+        nargs="?",
+        default="all",
+        metavar="BUILD_TOOL",
+        help="maven, gradle, or 'all' (default: all)",
+    )
+    parser.add_argument(
+        "--parallel", "-p",
+        action="store_true",
+        help="Run builds in parallel (faster but uses more resources)",
+    )
+    parser.add_argument(
+        "--copy-files", "-c",
+        action="store_true",
+        dest="copy_only",
+        help="Only copy additional files (evomaster-agent, jacoco)",
+    )
+    parser.add_argument(
+        "--interactive", "-i",
+        action="store_true",
+        help="Prompt for confirmation before destructive operations (e.g. deleting dist/)",
+    )
+    parser.add_argument(
+        "--evomaster", "-E",
+        action="store_true",
+        help="Also build evomaster runner jars (em/) and copy additional files. "
+             "Default: SUT-only mode (only cs/ is built, no evomaster runners)",
+    )
+    args = parser.parse_args()
+
+    valid_jdks = set(JDK_VERSIONS) | {"all"}
+    if args.jdk_version not in valid_jdks:
+        parser.error(f"Invalid JDK version '{args.jdk_version}'. Valid options: {', '.join(sorted(valid_jdks))}")
+
+    valid_tools = set(BUILD_TOOLS) | {"all"}
+    if args.build_tool not in valid_tools:
+        parser.error(f"Invalid build tool '{args.build_tool}'. Valid options: {', '.join(sorted(valid_tools))}")
+
+    return args
+
+
+def main():
+    args = parse_args()
+    compose = detect_compose_cmd()
+
+    print("WFD Docker Build Script")
+    print(f"Project directory: {PROJ_DIR}")
+    print(f"JDK Version: {args.jdk_version}")
+    print(f"Build Tool:  {args.build_tool}")
+    print(f"Mode: {'PARALLEL' if args.parallel else 'Sequential'}")
+    print(f"Build scope: {'Full (SUT + Evomaster runners)' if args.evomaster else 'SUT-only (cs/ only)'}")
+    print(f"Using: {' '.join(compose)}\n")
+
+    # Check Docker
+    if not shutil.which("docker"):
+        print("ERROR: Docker is not installed or not in PATH")
+        sys.exit(1)
+
+    dist_dir = PROJ_DIR / "dist"
+
+    os.environ.setdefault("HOME", str(Path.home()))
+
+    # --- Copy-only mode ---
+    if args.copy_only:
+        print("Copy Additional Files Only Mode")
+        dist_dir.mkdir(parents=True, exist_ok=True)
+        os.chdir(PROJ_DIR)
+        run(compose + ["-f", COMPOSE_FILE, "run", "--rm", "-T", "copy-additional-files"])
+        print("Files copied successfully!")
+        for f in ["evomaster-agent.jar", "jacocoagent.jar", "jacococli.jar"]:
+            show_jar(f)
+        return
+
+    # --- Collect services ---
+    services = [
+        f"build-jdk{jdk}-{tool}"
+        for jdk, tool in ALL_SERVICES
+        if should_build(jdk, tool, args.jdk_version, args.build_tool)
+        and service_dir_exists(jdk, tool)
+    ]
+
+    # --- Full-build warning & dist cleanup ---
+    if args.jdk_version == "all" and args.build_tool == "all":
+        print("WARNING: Full build mode detected!")
+        print("This will DELETE the entire dist/ folder and rebuild all projects.\n")
+        if dist_dir.exists():
+            jar_count = len(list(dist_dir.glob("**/*.jar")))
+            print(f"Current dist folder contents:\n  - {jar_count} JAR files found\n  - Location: {dist_dir}")
+        else:
+            print("Dist folder does not exist yet.")
+
+        if args.interactive:
+            print()
+            try:
+                reply = input("Do you want to continue and DELETE dist folder? (y/N): ").strip().lower()
+            except EOFError:
+                reply = ""
+
+            if reply not in ("y", "yes"):
+                print("\nBuild cancelled by user.")
+                print("Tip: Use 'dist-docker.py <JDK> <TOOL>' for incremental builds")
+                print("     Example: dist-docker.py 8 gradle")
+                return
+
+        print("\nCleaning dist folder (building all projects)...")
+        if dist_dir.exists():
+            shutil.rmtree(dist_dir)
+        dist_dir.mkdir(parents=True)
+        print("Dist folder cleaned")
+    else:
+        print("Incremental build mode - preserving existing dist folder...")
+        dist_dir.mkdir(parents=True, exist_ok=True)
+        print("Building into existing dist folder (will overwrite duplicates)")
+    print()
+
+    # --- Ensure Maven / Gradle cache dirs exist ---
+    home = Path.home()
+    for cache_name, cache_dir in [(".m2", home / ".m2"), (".gradle", home / ".gradle")]:
+        if not cache_dir.exists():
+            print(f"WARNING: {cache_name} cache not found at {cache_dir}, creating...")
+            cache_dir.mkdir(parents=True)
+
+    os.chdir(PROJ_DIR)
+
+    if not services:
+        print("No matching builds found!")
+        print(f"JDK Version: {args.jdk_version}\nBuild Tool:  {args.build_tool}\n")
+        print("Available combinations:")
+        for d in sorted(PROJ_DIR.glob("jdk_*")):
+            if d.is_dir():
+                print(f"  - {d.name}")
+        return
+
+    print("Building Docker images and running builds...")
+    print(f"Services to build: {services}\n")
+
+    # Step 1: Build Docker images in parallel (output suppressed to avoid interleaving)
+    print("Step 1: Building Docker images...")
+    procs = [
+        subprocess.Popen(
+            compose + ["-f", COMPOSE_FILE, "build", svc],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        for svc in services
+    ]
+    for p in procs:
+        p.wait()
+    print("All Docker images built!\n")
+
+    # Step 2: Run builds
+    print("Step 2: Running builds...")
+    if args.parallel:
+        print(">>> Running builds in PARALLEL mode...")
+        print(">>> WARNING: This will use significant CPU and RAM!\n")
+
+        procs = {svc: run_build(compose, svc, background=True, evomaster=args.evomaster) for svc in services}
+        print("Waiting for all builds to complete...")
+
+        failed = 0
+        for svc, proc in procs.items():
+            code = proc.wait()
+            if code != 0:
+                print(f"ERROR: {svc} failed with exit code {code}")
+                failed += 1
+
+        if failed:
+            print(f"\nERROR: {failed} build(s) failed!")
+            sys.exit(1)
+
+        print("\nAll parallel builds completed successfully!\n")
+    else:
+        print(">>> Running builds in SEQUENTIAL mode...\n")
+        for svc in services:
+            print(f">>> Building: {svc}")
+            result = run_build(compose, svc, evomaster=args.evomaster)
+            if result.returncode != 0:
+                print(f"\nERROR: {svc} build failed!")
+                sys.exit(1)
+            print()
+
+    if args.evomaster:
+        copy_additional_files(compose)
+
+    # Cleanup
+    print("Cleaning up Docker containers...")
+    run(compose + ["-f", COMPOSE_FILE, "down"])
+
+    # Summary
+    print()
+    print("Build Summary")
+    print(f"Builds executed: {len(services)}")
+    print("Checking dist folder contents...\n")
+
+    jar_count = count_jars()
+    print(f"Total JAR files created: {jar_count}\n")
+
+    if jar_count > 0:
+        print("Files in dist:")
+        for f in sorted(dist_dir.iterdir()):
+            print(f"  {f.name}  ({f.stat().st_size // 1024} KB)")
+        print()
+        print("SUCCESS - Builds completed!")
+        print(f"Output location: {dist_dir}")
+        print(f"JDK Version: {args.jdk_version}")
+        print(f"Build Tool:  {args.build_tool}")
+    else:
+        print("WARNING - No JAR files found in dist!")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
