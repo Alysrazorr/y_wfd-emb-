@@ -24,25 +24,25 @@ markdown <- function (){
 
   dt <- read.csv(DATA_FILE,header=T)
 
-  dt = dt[order(dt$TYPE, dt$LANGUAGE, -dt$LOCS, dt$NAME),]
+  dt <- dt[order(dt$TYPE, dt$NAME, -dt$LOCS, dt$LANGUAGE),]
   # skip industrial APIs that are not stored in EMB
-  dt = dt[dt$EMB==TRUE,]
+  dt <- dt[dt$EMB==TRUE,]
 
-  TABLE = "./table_emb.md"
+  TABLE <- "./table_emb.md"
   unlink(TABLE)
   sink(TABLE, append = TRUE, split = TRUE)
 
   #EMB,NAME,TYPE,LANGUAGE,RUNTIME,BUILD,FILES,LOCS,DATABASE,LICENSE,ENDPOINTS,AUTHENTICATION,URL
-  cat("|Name|Type|#LOCs|#SourceFiles|#Endpoints|Language(s)|Runtime|Build Tool|Database(s)|Authentication|\n")
+  cat("|Type|Name|#LOCs|#SourceFiles|#Endpoints|Language(s)|Runtime|Build Tool|Database(s)|Authentication|\n")
   ## Note: the ":" are used for alignment of the columns
   cat("|----|----|----:|-----------:|---------:|-----------|-------|----------|-----------|:------------:|\n")
 
   for (i in 1:nrow(dt)){
 
-    row = dt[i,]
-    cat("|__",row$NAME,"__|",sep="")
-
+    row <- dt[i,]
+    cat("|")
     cat(row$TYPE,"|",sep="")
+    cat("__",row$NAME,"__|",sep="")
     cat(row$LOCS,"|",sep="")
     cat(row$FILES,"|",sep="")
     cat(row$ENDPOINTS,"|",sep="")
@@ -122,9 +122,9 @@ oldLatexTable <- function(){
 
   dt <- read.csv(DATA_FILE,header=T)
 
-  dt = dt[order(dt$TYPE, dt$LANGUAGE, -dt$LOCS, dt$NAME),]
+  dt <- dt[order(dt$TYPE, dt$LANGUAGE, -dt$LOCS, dt$NAME),]
 
-  TABLE = "./old_statistics_table_emb.tex"
+  TABLE <- "./old_statistics_table_emb.tex"
   unlink(TABLE)
   sink(TABLE, append = TRUE, split = TRUE)
 
@@ -135,7 +135,7 @@ oldLatexTable <- function(){
 
   for (i in 1:nrow(dt)){
 
-    row = dt[i,]
+    row <- dt[i,]
     cat("\\emph{",row$NAME,"}",sep="")
 
     cat(" & ", row$TYPE)
@@ -146,7 +146,7 @@ oldLatexTable <- function(){
     databases = gsub(";", ", ", row$DATABASE)
     cat(" & ", databases)
 
-    url = row$URL
+    url <- row$URL
     if(url == "UNDEFINED"){
       cat(" & - ")
     } else {
