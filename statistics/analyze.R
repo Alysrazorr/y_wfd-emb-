@@ -64,7 +64,7 @@ markdown <- function (){
 }
 
 
-latex <- function(TABLE,SUTS,auth){
+latex <- function(TABLE,SUTS,auth, databases){
 
   # TODO what columns to include further could be passed as boolean selection.
   # will implement when needed
@@ -76,9 +76,15 @@ latex <- function(TABLE,SUTS,auth){
   unlink(TABLE)
   sink(TABLE, append = TRUE, split = TRUE)
 
-  cat("\\begin{tabular}{l rrrr}\\\\ \n")
+  cat("\\begin{tabular}{l rrr")
+  if(auth) cat("r")
+  if(databases) cat("r")
+  cat("}\\\\ \n")
   cat("\\toprule \n")
-  cat("SUT & \\#SourceFiles & \\#LOCs & \\#Endpoints & Auth\\\\ \n")
+  cat("SUT & \\#SourceFiles & \\#LOCs & \\#Endpoints ")
+  if(auth) cat("& Auth")
+  if(databases) cat("& Databases")
+  cat("\\\\ \n")
   cat("\\midrule \n")
 
   for (i in 1:nrow(dt)){
@@ -90,9 +96,14 @@ latex <- function(TABLE,SUTS,auth){
     cat(" & ", row$LOCS)
     cat(" & ", row$ENDPOINTS)
 
-    cat(" & ")
-    if(row$AUTHENTICATION){
+    if(auth){
+      cat(" & ")
+      if(row$AUTHENTICATION){
           cat("\\checkmark")
+      }
+    }
+    if(databases){
+      cat(" & ",row$DATABASE)
     }
 
     cat(" \\\\ \n")
@@ -106,8 +117,14 @@ latex <- function(TABLE,SUTS,auth){
   cat(sum(dt$LOCS))
   cat(" & ")
   cat(sum(dt$ENDPOINTS))
-  cat(" & ")
-  cat(sum(dt$AUTHENTICATION))
+  if(auth){
+    cat(" & ")
+    cat(sum(dt$AUTHENTICATION))
+  }
+  if(databases){
+    cat(" & ")
+    cat(sum(!is.na(dt$DATABASE) & trimws(dt$DATABASE) != ""))
+  }
 
   cat(" \\\\ \n")
 
