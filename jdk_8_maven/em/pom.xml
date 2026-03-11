@@ -11,6 +11,11 @@
     <artifactId>evomaster-benchmark-em</artifactId>
     <packaging>pom</packaging>
 
+    <properties>
+        <testcontainers.version>1.21.4</testcontainers.version>
+    </properties>
+
+
     <modules>
         <module>external</module>
         <module>embedded</module>
@@ -18,6 +23,7 @@
 
 
     <dependencies>
+
         <dependency>
             <groupId>org.evomaster</groupId>
             <artifactId>evomaster-client-java-controller</artifactId>
@@ -76,7 +82,7 @@
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers</artifactId>
-                <version>1.20.6</version>
+                <version>${testcontainers.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
