@@ -18,6 +18,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJ_DIR = SCRIPT_DIR.parent
 
 COMPOSE_FILE = "./scripts/build/docker-compose.build.yml"
+ENV_FILE = SCRIPT_DIR / "build" / ".env"
 
 JDK_VERSIONS = ["8", "11", "17", "21"]
 BUILD_TOOLS = ["maven", "gradle"]
@@ -65,10 +66,41 @@ def run_build(compose, service, *, background=False, evomaster=False):
     return subprocess.run(cmd, check=False)
 
 
-def copy_additional_files(compose, *, evomaster=False):
-    print(">>> Copying additional files to dist...")
-    env_args = ["-e", "BUILD_EVOMASTER=true"] if evomaster else []
-    run(compose + ["-f", COMPOSE_FILE, "run", "--rm", "-T"] + env_args + ["copy-additional-files"])
+def load_env(key):
+    for line in ENV_FILE.read_text().splitlines():
+        line = line.strip()
+        if line.startswith(f"{key}="):
+            return line.split("=", 1)[1]
+    return None
+
+
+def copy_additional_files(*, evomaster=False):
+    dist = PROJ_DIR / "dist"
+    dist.mkdir(parents=True, exist_ok=True)
+
+    jacoco_dir = PROJ_DIR / "jacoco"
+    for name in ["jacocoagent.jar", "jacococli.jar"]:
+        src = jacoco_dir / name
+        if src.exists():
+            shutil.copy2(src, dist / name)
+            print(f"  Copied {name}")
+        else:
+            print(f"  WARNING: {src} not found, skipping")
+
+    if evomaster:
+        version = load_env("EVOMASTER_VERSION")
+        if not version:
+            print("  ERROR: EVOMASTER_VERSION not found in .env")
+            sys.exit(1)
+        agent_name = f"evomaster-client-java-instrumentation-{version}.jar"
+        src = Path.home() / ".m2" / "repository" / "org" / "evomaster" / "evomaster-client-java-instrumentation" / version / agent_name
+        if src.exists():
+            shutil.copy2(src, dist / "evomaster-agent.jar")
+            print(f"  Copied evomaster-agent.jar (v{version})")
+        else:
+            print(f"  ERROR: {src} not found")
+            sys.exit(1)
+
     print("Additional files copied!\n")
 
 
@@ -186,7 +218,7 @@ def main():
         print("Copy Additional Files Only Mode")
         dist_dir.mkdir(parents=True, exist_ok=True)
         os.chdir(PROJ_DIR)
-        copy_additional_files(compose, evomaster=args.evomaster)
+        copy_additional_files(evomaster=args.evomaster)
         print("Files copied successfully!")
         for f in ["evomaster-agent.jar", "jacocoagent.jar", "jacococli.jar"]:
             show_jar(f)
@@ -328,7 +360,7 @@ def main():
                 sys.exit(1)
             print(f"    Completed in {svc_elapsed}\n")
 
-    copy_additional_files(compose, evomaster=args.evomaster)
+    copy_additional_files(evomaster=args.evomaster)
 
     # Cleanup
     print("Cleaning up Docker containers...")
