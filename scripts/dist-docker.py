@@ -48,7 +48,7 @@ def detect_compose_cmd():
     sys.exit(1)
 
 
-def fmt_elapsed(seconds):
+def format_elapsed_time(seconds):
     m, s = divmod(int(seconds), 60)
     return f"{m}m {s}s" if m else f"{s}s"
 
@@ -65,11 +65,16 @@ def run_build(compose, service, *, background=False, evomaster=False):
     return subprocess.run(cmd, check=False)
 
 
-def copy_additional_files(compose):
-    print("Copying Additional Files")
-    print(">>> Copying evomaster-agent and jacoco files to dist...")
-    run(compose + ["-f", COMPOSE_FILE, "run", "--rm", "-T", "copy-additional-files"])
-    print("Additional files copied!\n")
+def copy_jacoco(compose):
+    print(">>> Copying jacoco files to dist...")
+    run(compose + ["-f", COMPOSE_FILE, "run", "--rm", "-T", "copy-jacoco"])
+    print("Jacoco files copied!\n")
+
+
+def copy_evomaster_agent(compose):
+    print(">>> Copying evomaster-agent to dist...")
+    run(compose + ["-f", COMPOSE_FILE, "run", "--rm", "-T", "copy-evomaster-agent"])
+    print("evomaster-agent.jar copied!\n")
 
 
 def show_jar(path):
@@ -104,9 +109,10 @@ def parse_args():
             "  dist-docker.py --parallel         # Build all projects in parallel\n"
             "  dist-docker.py 8 gradle           # Build only JDK 8 Gradle projects\n"
             "  dist-docker.py 11 maven -p        # Build JDK 11 Maven in parallel mode\n"
-            "  dist-docker.py --copy-files       # Only copy evomaster-agent and jacoco files\n"
+            "  dist-docker.py --copy-files       # Only copy jacoco files\n"
+            "  dist-docker.py --copy-files -E    # Only copy jacoco + evomaster-agent files\n"
             "  dist-docker.py --interactive      # Prompt before deleting dist/ on full build\n"
-            "  dist-docker.py --evomaster        # Also build evomaster runners (full build)\n"
+            "  dist-docker.py --evomaster        # Also build evomaster runners + copy evomaster-agent\n"
             "  dist-docker.py -E --parallel      # Full build in parallel"
         ),
     )
@@ -185,7 +191,9 @@ def main():
         print("Copy Additional Files Only Mode")
         dist_dir.mkdir(parents=True, exist_ok=True)
         os.chdir(PROJ_DIR)
-        run(compose + ["-f", COMPOSE_FILE, "run", "--rm", "-T", "copy-additional-files"])
+        copy_jacoco(compose)
+        if args.evomaster:
+            copy_evomaster_agent(compose)
         print("Files copied successfully!")
         for f in ["evomaster-agent.jar", "jacocoagent.jar", "jacococli.jar"]:
             show_jar(f)
@@ -272,11 +280,11 @@ def main():
         for svc, (proc, svc_start) in list(img_pending.items()):
             if proc.poll() is not None:
                 done += 1
-                print(f"  [{done}/{total}] Image ready: {svc}  ({fmt_elapsed(time.time() - svc_start)})")
+                print(f"  [{done}/{total}] Image ready: {svc}  ({format_elapsed_time(time.time() - svc_start)})")
                 del img_pending[svc]
         if img_pending:
             time.sleep(2)
-    print(f"All Docker images built! (took {fmt_elapsed(time.time() - img_start)})\n")
+    print(f"All Docker images built! (took {format_elapsed_time(time.time() - img_start)})\n")
 
     # Step 2: Run builds
     step2_start = time.time()
@@ -300,7 +308,7 @@ def main():
                 code = proc.poll()
                 if code is not None:
                     done += 1
-                    svc_elapsed = fmt_elapsed(time.time() - svc_start)
+                    svc_elapsed = format_elapsed_time(time.time() - svc_start)
                     if code != 0:
                         print(f"  [{done}/{total}] FAILED: {svc}  (exit code {code}, {svc_elapsed})")
                         failed += 1
@@ -314,28 +322,29 @@ def main():
             print(f"\nERROR: {failed} build(s) failed!")
             sys.exit(1)
 
-        print(f"\nAll parallel builds completed successfully! (took {fmt_elapsed(time.time() - step2_start)})\n")
+        print(f"\nAll parallel builds completed successfully! (took {format_elapsed_time(time.time() - step2_start)})\n")
     else:
         print(">>> Running builds in SEQUENTIAL mode...\n")
         for i, svc in enumerate(services, 1):
             print(f">>> [{i}/{total}] Building: {svc}")
             svc_start = time.time()
             result = run_build(compose, svc, evomaster=args.evomaster)
-            svc_elapsed = fmt_elapsed(time.time() - svc_start)
+            svc_elapsed = format_elapsed_time(time.time() - svc_start)
             if result.returncode != 0:
                 print(f"\nERROR: {svc} build failed! (after {svc_elapsed})")
                 sys.exit(1)
             print(f"    Completed in {svc_elapsed}\n")
 
+    copy_jacoco(compose)
     if args.evomaster:
-        copy_additional_files(compose)
+        copy_evomaster_agent(compose)
 
     # Cleanup
     print("Cleaning up Docker containers...")
     run(compose + ["-f", COMPOSE_FILE, "down"])
 
     # Summary
-    total_elapsed = fmt_elapsed(time.time() - build_start)
+    total_elapsed = format_elapsed_time(time.time() - build_start)
     print()
     print("Build Summary")
     print(f"Builds executed: {len(services)}")

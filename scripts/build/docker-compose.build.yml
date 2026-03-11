@@ -264,17 +264,24 @@ services:
         fi
         echo 'JDK 21 Maven build completed'
 
-  copy-additional-files:
+  copy-jacoco:
+    image: alpine:latest
+    volumes:
+      - ${DIST_FOLDER}:/dist
+      - ${JACOCO_FOLDER}:/jacoco
+    command: >
+      sh -c "cp /jacoco/jacocoagent.jar /dist/ &&
+             cp /jacoco/jacococli.jar /dist/ &&
+             echo 'Jacoco files copied'"
+
+  copy-evomaster-agent:
     image: alpine:latest
     volumes:
       - ${HOME}/.m2:/root/.m2
       - ${DIST_FOLDER}:/dist
-      - ${JACOCO_FOLDER}:/jacoco
     command: >
       sh -c "cp /root/.m2/repository/org/evomaster/evomaster-client-java-instrumentation/${EVOMASTER_VERSION}/evomaster-client-java-instrumentation-${EVOMASTER_VERSION}.jar /dist/evomaster-agent.jar &&
-             cp /jacoco/jacocoagent.jar /dist/ &&
-             cp /jacoco/jacococli.jar /dist/ &&
-             echo 'Additional files copied'"
+             echo 'evomaster-agent.jar copied'"
 
 volumes:
   gradle-cache-jdk8:
