@@ -65,16 +65,11 @@ def run_build(compose, service, *, background=False, evomaster=False):
     return subprocess.run(cmd, check=False)
 
 
-def copy_jacoco(compose):
-    print(">>> Copying jacoco files to dist...")
-    run(compose + ["-f", COMPOSE_FILE, "run", "--rm", "-T", "copy-jacoco"])
-    print("Jacoco files copied!\n")
-
-
-def copy_evomaster_agent(compose):
-    print(">>> Copying evomaster-agent to dist...")
-    run(compose + ["-f", COMPOSE_FILE, "run", "--rm", "-T", "copy-evomaster-agent"])
-    print("evomaster-agent.jar copied!\n")
+def copy_additional_files(compose, *, evomaster=False):
+    print(">>> Copying additional files to dist...")
+    env_args = ["-e", "BUILD_EVOMASTER=true"] if evomaster else []
+    run(compose + ["-f", COMPOSE_FILE, "run", "--rm", "-T"] + env_args + ["copy-additional-files"])
+    print("Additional files copied!\n")
 
 
 def show_jar(path):
@@ -109,8 +104,8 @@ def parse_args():
             "  dist-docker.py --parallel         # Build all projects in parallel\n"
             "  dist-docker.py 8 gradle           # Build only JDK 8 Gradle projects\n"
             "  dist-docker.py 11 maven -p        # Build JDK 11 Maven in parallel mode\n"
-            "  dist-docker.py --copy-files       # Only copy jacoco files\n"
-            "  dist-docker.py --copy-files -E    # Only copy jacoco + evomaster-agent files\n"
+            "  dist-docker.py --copy-files       # Only copy additional files (jacoco)\n"
+            "  dist-docker.py --copy-files -E    # Copy additional files (jacoco + evomaster-agent)\n"
             "  dist-docker.py --interactive      # Prompt before deleting dist/ on full build\n"
             "  dist-docker.py --evomaster        # Also build evomaster runners + copy evomaster-agent\n"
             "  dist-docker.py -E --parallel      # Full build in parallel"
@@ -191,9 +186,7 @@ def main():
         print("Copy Additional Files Only Mode")
         dist_dir.mkdir(parents=True, exist_ok=True)
         os.chdir(PROJ_DIR)
-        copy_jacoco(compose)
-        if args.evomaster:
-            copy_evomaster_agent(compose)
+        copy_additional_files(compose, evomaster=args.evomaster)
         print("Files copied successfully!")
         for f in ["evomaster-agent.jar", "jacocoagent.jar", "jacococli.jar"]:
             show_jar(f)
@@ -335,9 +328,7 @@ def main():
                 sys.exit(1)
             print(f"    Completed in {svc_elapsed}\n")
 
-    copy_jacoco(compose)
-    if args.evomaster:
-        copy_evomaster_agent(compose)
+    copy_additional_files(compose, evomaster=args.evomaster)
 
     # Cleanup
     print("Cleaning up Docker containers...")
