@@ -42,7 +42,7 @@ val EVOMASTER_VERSION = project.ext.get("EVOMASTER_VERSION")
 dependencies{
     implementation("org.evomaster:evomaster-client-java-controller:$EVOMASTER_VERSION")
     implementation("org.evomaster:evomaster-client-java-instrumentation:$EVOMASTER_VERSION")
-    implementation("org.testcontainers:testcontainers:1.15.2")
+    implementation("org.evomaster:evomaster-client-java-dependencies:${EVOMASTER_VERSION}")
     implementation(project(":cs:graphql:patio-api"))
 
     implementation("io.micronaut.data:micronaut-data-tx:1.0.2")
