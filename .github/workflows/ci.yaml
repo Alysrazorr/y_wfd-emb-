@@ -41,12 +41,13 @@ jobs:
             command: chmod +x gradlew & ./gradlew build -x test
     steps:
       - name: Setup JDK for EvoMaster
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v5
         with:
           # client library is on 8, but, to build whole EM, need higher.
           java-version: 17
+          distribution: 'zulu'
       - name: Checkout EvoMaster
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: WebFuzzing/EvoMaster
           path: evomaster
@@ -58,11 +59,12 @@ jobs:
         run: mvn clean install -DskipTests
         working-directory: evomaster/client-java
       - name: Setup JDK for EMB
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v5
         with:
           java-version: ${{ matrix.jdk-version }}
+          distribution: 'zulu'
       - name: Checkout EMB
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Build EMB
         run: ${{ matrix.command }}
         working-directory: ${{ matrix.folder }}
