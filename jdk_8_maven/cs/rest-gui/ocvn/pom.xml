@@ -34,8 +34,9 @@
     <modules>
         <module>persistence</module>
         <module>web</module>
-        <module>ui</module>
-        <module>forms</module>
+        <!-- MODIFIED: not used for APIs, and were downloading NodeJS directly, which is unstable (CI became flaky) -->
+<!--        <module>ui</module>-->
+<!--        <module>forms</module>-->
         <module>persistence-mongodb</module>
     </modules>
 
