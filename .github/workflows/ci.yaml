@@ -31,7 +31,7 @@ jobs:
             command: mvn clean install -DskipTests
           # Gradle
           - folder: jdk_8_gradle
-            jdk-version: 1.8
+            jdk-version: 8
             command: chmod +x gradlew & ./gradlew build -x test
           - folder: jdk_11_gradle
             jdk-version: 11
