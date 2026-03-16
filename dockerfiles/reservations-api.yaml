@@ -33,12 +33,11 @@ services:
       # default env does not work on volumes
 #      - ${JACOCODIR}:/jacoco
   db:
-    image: bitnami/mongodb:4.4
+    image: mongo:4.4
     tmpfs:
-      - '/bitnami/mongodb'
-    environment:
-      MONGODB_REPLICA_SET_MODE: primary
-      ALLOW_EMPTY_PASSWORD: yes
+      - '/data/db'
     volumes:
+      - ../scripts/dockerize/data/additional_files/reservations-api/mongo-init.js:/docker-entrypoint-initdb.d/01-init-replica.js
       - ../scripts/dockerize/data/additional_files/reservations-api/mongo_import.sh:/docker-entrypoint-initdb.d/mongo_import.sh
       - ../scripts/dockerize/data/additional_files/reservations-api/init.json:/fixtures/init.json
+    command: mongod --replSet rs0 --bind_ip_all
