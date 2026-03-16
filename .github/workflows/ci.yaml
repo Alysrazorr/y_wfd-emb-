@@ -18,7 +18,7 @@ jobs:
         include:
           # Maven
           - folder: jdk_8_maven
-            jdk-version: 1.8
+            jdk-version: 8
             command: mvn clean install -DskipTests
           - folder: jdk_11_maven
             jdk-version: 11
