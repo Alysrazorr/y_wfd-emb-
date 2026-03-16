@@ -73,6 +73,11 @@ def replaceInDist():
     replacement = 'EVOMASTER_VERSION = "'+version+'"\n'
     replace("scripts/dist.py", regex, replacement)
 
+def replaceInDockerEnv():
+    regex = re.compile(r'^EVOMASTER_VERSION\s*=\s*.*$')
+    replacement = 'EVOMASTER_VERSION='+version+'\n'
+    replace("scripts/build/.env", regex, replacement)
+
 def replaceInProperty(file):
     regex = re.compile(r'.*EVOMASTER_VERSION.*=.*')
     replacement = 'EVOMASTER_VERSION='+version+'\n'
@@ -139,8 +144,8 @@ if target == "em":
     replaceInGradle("jdk_8_gradle/build.gradle")
     replaceInGradle("jdk_11_gradle/build.gradle")
     replaceInGradle("jdk_17_gradle/build.gradle")
-
     replaceInDist()
+    replaceInDockerEnv()
 
 if target == "wfd":
     versionSetMaven("/jdk_8_maven",JAVA_HOME_8)

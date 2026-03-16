@@ -1,0 +1,13 @@
+FROM maven:3.9-eclipse-temurin-8
+
+RUN apt-get update && \
+    apt-get install -y wget unzip && \
+    wget https://services.gradle.org/distributions/gradle-6.9.4-bin.zip && \
+    unzip gradle-6.9.4-bin.zip -d /opt && \
+    rm gradle-6.9.4-bin.zip && \
+    ln -s /opt/gradle-6.9.4/bin/gradle /usr/bin/gradle && \
+    apt-get clean
+
+WORKDIR /build
+
+CMD ["/bin/bash"]
