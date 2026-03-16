@@ -26,13 +26,8 @@ services:
       context: ..
     environment:
        AUTH_PORT: ${AUTH_PORT:-8081}
-#      TOOL: ${TOOL:-undefined}
-#      RUN: ${RUN:-0}
     ports:
       - "${JACOCO_PORT:-6300}:6300"
-#    volumes:
-      # default env does not work on volumes
-#      - ${JACOCODIR}:/jacoco
     {%- if DEPENDS_ON | length > 0 %}
     depends_on:
     {% for depends in DEPENDS_ON %}
