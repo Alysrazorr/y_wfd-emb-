@@ -1,6 +1,6 @@
 
 allprojects {
     ext {
-        EVOMASTER_VERSION = "5.0.3-SNAPSHOT"
+        EVOMASTER_VERSION = "5.1.0"
     }
 }
