@@ -84,7 +84,8 @@ public class EmbeddedEvoMasterController extends EmbeddedSutController {
                         "--spring.datasource.username=sa",
                         "--spring.datasource.password",
                         "--dg-toolkit.derby.port=0",
-                        "--spring.cache.type=NONE"
+                        "--spring.cache.type=NONE",
+                        "--spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration"
                 });
 
 

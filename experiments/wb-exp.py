@@ -309,8 +309,13 @@ os.makedirs(REPORT_DIR)
 SCRIPT_DIR = BASE_DIR + "/scripts"
 os.makedirs(SCRIPT_DIR)
 
-TEST_DIR = BASE_DIR + "/tests"
-os.makedirs(TEST_DIR)
+TESTS_DIR = BASE_DIR + "/tests"
+os.makedirs(TESTS_DIR)
+
+### NOTE: this function MUST be kept in sync between wb-exp.py and bb-exp.py
+def getTestDir(tool,sutname,port):
+    return pathlib.PurePath(TESTS_DIR + "/"+ tool  + "/" + sutname + "/" + str(port)).as_posix()
+
 
 ALL_LOGS = LOGS_DIR + "/logs"
 #We might end up generating gigas of log files. So, at each new experiments, we delete previous logs
@@ -323,7 +328,7 @@ CONTROLLER_PID = "CONTROLLER_PID"
 
 REPORT_DIR = str(pathlib.PurePath(REPORT_DIR).as_posix())
 SCRIPT_DIR = str(pathlib.PurePath(SCRIPT_DIR).as_posix())
-TEST_DIR = str(pathlib.PurePath(TEST_DIR).as_posix())
+TESTS_DIR = str(pathlib.PurePath(TESTS_DIR).as_posix())
 LOG_DIR = str(pathlib.PurePath(LOG_DIR).as_posix())
 
 #Due to Windows limitations (ie crappy FS), we need to copy JARs over
@@ -594,7 +599,7 @@ def addJobBody(port, sut, seed, setting, configName):
     params += " --statisticsColumnId=" + sut.name
     params += " --seed=" + str(seed)
     params += " --sutControllerPort=" + str(port)
-    params += " --outputFolder=" + TEST_DIR + "/" + sut.name
+    params += " --outputFolder=" + getTestDir(configName,sut.name,port)
     params += " --statisticsFile=" + REPORT_DIR + "/statistics" + identifier + ".csv"
     params += " --snapshotInterval=5"
     params += " --snapshotStatisticsFile=" + REPORT_DIR + "/snapshot" + identifier + ".csv"
@@ -616,6 +621,7 @@ def addJobBody(port, sut, seed, setting, configName):
         params += " --jaCoCoOutputFile="+str(pathlib.PurePath(os.path.abspath("./exec/"+sut.name+"__wb"+configName+"__"+str(port)+"__jacoco.exec")).as_posix())
         # params += " --enableBasicAssertions=false" # TODO need to deal with flakiness
 
+    params += fixedCustomParams()
 
     JAVA = getJavaExeByJDK(JDK_21)
     command = JAVA + EVOMASTER_JAVA_OPTIONS + params + " >> " + em_log + " 2>&1"
@@ -776,6 +782,13 @@ def is_float(input):
 ### Following will need to be changed based on what kind of experiments
 ### we want to run.
 ############################################################################
+
+def fixedCustomParams():
+    #  new, extra custom params that applies to ALL experiments
+    params = ""
+    # params += " --useExperimentalOracles true"
+    return params
+
 
 def getConfigs():
 

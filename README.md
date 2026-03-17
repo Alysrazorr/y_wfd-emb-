@@ -25,7 +25,7 @@ __White-box Testing__. For each SUT, we implemented _driver_ classes for _EvoMas
 As well as enable setting up different properties in a _uniform_ way, like choosing TCP port numbers for the HTTP servers.
 If a SUT uses any external services (e.g., a SQL database), these will be automatically started via Docker in these driver classes.
 
-**NOTE**: version 1.6.1 was last one in which we still updated drivers for JavaScript and C\#. Those SUTs are not built anymore by default, and latest versions of *EvoMaster* might not work on those old drivers. Updating drivers for different programming languages (and re-implement white-box heuristics) is a massive amount of work, which unfortunately has little to no value for the scientific community (based on our experience). Those SUTs are still here in WFD to be able to replicate old experiments, but unfortunately not for *white-box* testing with latest versions of *EvoMaster*.
+**NOTE**: version 1.6.1 was last one in which we still updated drivers for JavaScript and C\#. Those SUTs are not built anymore by default, and latest versions of *EvoMaster* will not work on those old drivers. Updating drivers for different programming languages (and re-implement white-box heuristics) is a massive amount of work, which unfortunately has little to no value for the scientific community (based on our experience). Those SUTs are still here in WFD to be able to replicate old experiments, but unfortunately not for *white-box* testing with latest versions of *EvoMaster*.
 
 
 
@@ -242,7 +242,7 @@ Auth configuration files can found in the [auth](auth) folder.
 
 ## Using This Repository
 
-Due to several reasons, the software in this repository is not published as a library (e.g., on Maven and NPM).
+Due to several reasons, the software in this repository is not published as a library (e.g., on Maven).
 To use WFD, you need to clone this repository:
 
 ```
@@ -251,16 +251,22 @@ git clone https://github.com/WebFuzzing/Dataset.git
 
 There are at least 2 main use cases for WFD:
 
-* Run experiments black-box fuzzers
+* Run experiments __black-box__ fuzzers
 
-* Run experiments with white-box _EvoMaster_
+* Run experiments with __white-box__ _EvoMaster_
 
 
-Everything can be setup by running the script `scripts/dist.py`.
+_Black-box_ testing: you can build all the SUTs via Docker using  `scripts/dist-docker.py`. Once the script is completed, all the SUTs will be available under the `dist` folder. Each SUT can be started with the Docker Compose files under `dockerfiles`. For example:
+
+```
+docker-compose -f dockerfiles/reservations-api.yaml up
+```
+
+_White-box_ testing: everything can be setup by running the script `scripts/dist.py`.
 Note that you will need installed at least Maven, Gradle, JDK 8, JDK 11, JDK 17, JDK 21, NPM, as well as Docker.
 Also, you will need to setup environment variables like `JAVA_HOME_8`, `JAVA_HOME_11`,  `JAVA_HOME_17` and `JAVA_HOME_21`.
 The script will issue error messages if any prerequisite is missing.
-Once the script is completed, all the SUTs will be available under the `dist` folder, and a `dist.zip` will be created as well (if `scripts/dist.py` is run with `True` as input).
+Once the script is completed, not only all the SUTs will be available under the `dist` folder, but also all the _driver_ executables for _EvoMaster_. 
 
 Regarding Maven, most-third party dependencies are automatically downloaded from Maven Central.
 However, some dependencies are from GitHub, which unfortunately require authentication to be able to download such dependencies.
@@ -296,22 +302,6 @@ In latest versions of Maven, you need to create an authorization token in GitHub
 
 
 
-[//]: # (There is also a Docker file to run `dist.py`, named `build.dockerfile`.)
-
-[//]: # (It can be built with:)
-
-[//]: # ()
-[//]: # (```)
-
-[//]: # (docker build -f build.dockerfile -t emb .)
-
-[//]: # (```)
-
-[//]: # ()
-[//]: # (The `dist` folder with all SUTs will be under `/emb/dist`. )
-
-
-
 In the built `dist` folder, the files will be organized as follows:
  `<name>-sut.jar` will be the non-instrumented SUTs, whereas their executable drivers for white-box testing will be called `<name>-evomaster-runner.jar`.
  Instrumentation can be done at runtime by attaching the `evomaster-agent.jar` JavaAgent. If you are running experiments with EvoMaster, this will be automatically attached when running experiments with experiment scripts (discussed in next section). Or it can be attached manually with JVM option `-Devomaster.instrumentation.jar.path=evomaster-agent.jar` when starting the driver.
@@ -327,7 +317,7 @@ Each folder represents a set of SUTs (and drivers) that can be built using the s
 For example, the folder `jdk_8_maven` contains all the SUTs that need JDK 8 and are built with Maven.
 On the other hand, the SUTs in the folder `jdk_11_gradle` require JDK 11 and Gradle.
 
-For thr JVM, each module has 2 submodules, called `cs` (short for "Case Study") and `em` (short for "EvoMaster").
+Each module has 2 submodules, called `cs` (short for "Case Study") and `em` (short for "EvoMaster").
 `cs` contains all the source code of the different SUTs, whereas `em` contains all the drivers.
 Note: building a top-module will build as well all of its internal submodules.
 

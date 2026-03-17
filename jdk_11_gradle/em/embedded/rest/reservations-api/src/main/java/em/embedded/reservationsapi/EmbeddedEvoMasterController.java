@@ -58,10 +58,17 @@ public class EmbeddedEvoMasterController extends EmbeddedSutController {
     //  https://hub.docker.com/r/bitnami/mongodb
     // cannot use standard Mongo image, due ridiculous handling of transaction that requires a cluster...
 
-    private static final GenericContainer mongodbContainer = new GenericContainer("bitnami/mongodb:" + MONGODB_VERSION)
-            .withTmpFs(Collections.singletonMap("/bitnami/mongodb", "rw"))
+//    private static final GenericContainer mongodbContainer = new GenericContainer("bitnami/mongodb:" + MONGODB_VERSION)
+  //          .withTmpFs(Collections.singletonMap("/bitnami/mongodb", "rw"))
+    //        .withEnv("MONGODB_REPLICA_SET_MODE", "primary")
+      //      .withEnv("ALLOW_EMPTY_PASSWORD", "yes")
+        //    .withExposedPorts(MONGODB_PORT);
+
+    private static final GenericContainer mongodbContainer = new GenericContainer("mongo:" + MONGODB_VERSION)
+            .withTmpFs(Collections.singletonMap("/data/db", "rw"))
             .withEnv("MONGODB_REPLICA_SET_MODE", "primary")
             .withEnv("ALLOW_EMPTY_PASSWORD", "yes")
+            .withCommand("--replSet rs0")
             .withExposedPorts(MONGODB_PORT);
 
 
@@ -87,6 +94,9 @@ public class EmbeddedEvoMasterController extends EmbeddedSutController {
         mongodbContainer.start();
         mongoDbUrl = "mongodb://" + mongodbContainer.getContainerIpAddress() + ":" + mongodbContainer.getMappedPort(MONGODB_PORT) + "/" + MONGODB_DATABASE_NAME;
         mongoClient = MongoClients.create(mongoDbUrl);
+
+        mongoClient.getDatabase("admin")
+                .runCommand(new Document("replSetInitiate", new Document()));
 
         /*
          This parameter is related to "cs/rest/reservations-api/src/main/java/sk/cyrilgavala/reservationsApi/web/controller/UserRestController.java" class.

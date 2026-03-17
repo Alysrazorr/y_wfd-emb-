@@ -9,7 +9,19 @@ on:
 
 jobs:
 
-  projects:
+# TODO need to use profiles to avoid dependencies to EM in the build... would work on master, but not on develop due to snapshot versions
+#  docker-build:
+#    # this one doesn't use EvoMaster drivers
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout WFD
+#        uses: actions/checkout@v6
+#      - name: Build All With Docker
+#        run: python scripts/dist-docker.py
+
+  direct-builds:
+#    TODO put back once issue fixed
+#    needs: docker-build
     runs-on:  ${{ matrix.os }}
     strategy:
       matrix:
@@ -18,7 +30,7 @@ jobs:
         include:
           # Maven
           - folder: jdk_8_maven
-            jdk-version: 1.8
+            jdk-version: 8
             command: mvn clean install -DskipTests
           - folder: jdk_11_maven
             jdk-version: 11
@@ -31,7 +43,7 @@ jobs:
             command: mvn clean install -DskipTests
           # Gradle
           - folder: jdk_8_gradle
-            jdk-version: 1.8
+            jdk-version: 8
             command: chmod +x gradlew & ./gradlew build -x test
           - folder: jdk_11_gradle
             jdk-version: 11
@@ -41,11 +53,13 @@ jobs:
             command: chmod +x gradlew & ./gradlew build -x test
     steps:
       - name: Setup JDK for EvoMaster
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v5
         with:
-          java-version: 1.8
+          # client library is on 8, but, to build whole EM, need higher.
+          java-version: 17
+          distribution: 'zulu'
       - name: Checkout EvoMaster
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: WebFuzzing/EvoMaster
           path: evomaster
@@ -56,12 +70,13 @@ jobs:
       - name: Install EvoMaster client-java
         run: mvn clean install -DskipTests
         working-directory: evomaster/client-java
-      - name: Setup JDK for EMB
-        uses: actions/setup-java@v1
+      - name: Setup JDK for WFD
+        uses: actions/setup-java@v5
         with:
           java-version: ${{ matrix.jdk-version }}
-      - name: Checkout EMB
-        uses: actions/checkout@v4
-      - name: Build EMB
+          distribution: 'zulu'
+      - name: Checkout WFD
+        uses: actions/checkout@v6
+      - name: Build WFD
         run: ${{ matrix.command }}
         working-directory: ${{ matrix.folder }}

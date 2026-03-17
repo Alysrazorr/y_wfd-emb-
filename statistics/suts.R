@@ -61,6 +61,6 @@ suts <- function(){
     ""
   )
 
-  latex(TABLE,SUTS)
+  latex(TABLE,SUTS,TRUE,TRUE)
 }
 

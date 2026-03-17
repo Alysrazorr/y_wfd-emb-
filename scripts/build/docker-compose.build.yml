@@ -1,0 +1,270 @@
+services:
+  build-jdk8-maven:
+    build:
+      context: .
+      dockerfile: Dockerfile.jdk8
+    image: emb-build-jdk8
+    volumes:
+      - ${HOME}/.m2:/root/.m2
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_8_MVN_FOLDER}:/build/jdk_8_maven
+    working_dir: /build/jdk_8_maven
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          mvn clean install -DskipTests
+        else
+          (cd cs && mvn clean install -DskipTests)
+        fi
+        cp cs/rest/original/blogapi/target/blogapi-sut.jar /dist/
+        cp cs/rest/original/user-management/target/user-management-sut.jar /dist/
+        cp cs/rest/original/features-service/target/features-service-sut.jar /dist/
+        cp cs/rest/original/scout-api/api/target/scout-api-sut.jar /dist/
+        cp cs/rest/original/proxyprint/target/proxyprint-sut.jar /dist/
+        cp cs/rest/original/catwatch/catwatch-backend/target/catwatch-sut.jar /dist/
+        cp cs/rest/artificial/ncs/target/rest-ncs-sut.jar /dist/
+        cp cs/rest/original/youtube-mock/target/youtube-mock-sut.jar /dist/
+        cp cs/rest/artificial/scs/target/rest-scs-sut.jar /dist/
+        cp cs/rest/artificial/news/target/rest-news-sut.jar /dist/
+        cp cs/rest-gui/ocvn/web/target/ocvn-sut.jar /dist/
+        cp cs/rest/original/languagetool/languagetool-server/target/languagetool-sut.jar /dist/
+        cp cs/rest/original/restcountries/target/restcountries-sut.jar /dist/
+        cp cs/rest/original/session-service/target/session-service-sut.jar /dist/
+        cp cs/rest-gui/gestaohospital/target/gestaohospital-sut.jar /dist/
+        cp cs/rest-gui/genome-nexus/web/target/genome-nexus-sut.jar /dist/
+        cp cs/rest/original/spring-batch-rest/example/api/target/spring-batch-rest-sut.jar /dist/
+        cp cs/rest/original/spring-actuator-demo/target/spring-actuator-demo-sut.jar /dist/
+        cp cs/rest/original/swagger-petstore/target/swagger-petstore-sut.jar /dist/
+        cp cs/rest/original/spring-ecommerce/target/spring-ecommerce-sut.jar /dist/
+        cp cs/graphql/petclinic-graphql/target/petclinic-graphql-sut.jar /dist/
+        cp cs/graphql/graphql-ncs/target/graphql-ncs-sut.jar /dist/
+        cp cs/graphql/graphql-scs/target/graphql-scs-sut.jar /dist/
+        cp cs/rpc/thrift/artificial/thrift-ncs/target/rpc-thrift-ncs-sut.jar /dist/
+        cp cs/rpc/thrift/artificial/thrift-scs/target/rpc-thrift-scs-sut.jar /dist/
+        cp cs/rpc/grpc/artificial/grpc-ncs/target/rpc-grpc-ncs-sut.jar /dist/
+        cp cs/rpc/grpc/artificial/grpc-scs/target/rpc-grpc-scs-sut.jar /dist/
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          cp em/external/rest/blogapi/target/blogapi-evomaster-runner.jar /dist/
+          cp em/external/rest/user-management/target/user-management-evomaster-runner.jar /dist/
+          cp em/external/rest/features-service/target/features-service-evomaster-runner.jar /dist/
+          cp em/external/rest/scout-api/target/scout-api-evomaster-runner.jar /dist/
+          cp em/external/rest/proxyprint/target/proxyprint-evomaster-runner.jar /dist/
+          cp em/external/rest/catwatch/target/catwatch-evomaster-runner.jar /dist/
+          cp em/external/rest/ncs/target/rest-ncs-evomaster-runner.jar /dist/
+          cp em/external/rest/youtube-mock/target/youtube-mock-evomaster-runner.jar /dist/
+          cp em/external/rest/scs/target/rest-scs-evomaster-runner.jar /dist/
+          cp em/external/rest/news/target/rest-news-evomaster-runner.jar /dist/
+          cp em/external/rest/ocvn/target/ocvn-evomaster-runner.jar /dist/
+          cp em/external/rest/languagetool/target/languagetool-evomaster-runner.jar /dist/
+          cp em/external/rest/restcountries/target/restcountries-evomaster-runner.jar /dist/
+          cp em/external/rest/session-service/target/session-service-evomaster-runner.jar /dist/
+          cp em/external/rest/gestaohospital/target/gestaohospital-evomaster-runner.jar /dist/
+          cp em/external/rest/genome-nexus/target/genome-nexus-evomaster-runner.jar /dist/
+          cp em/external/rest/spring-batch-rest/target/spring-batch-rest-evomaster-runner.jar /dist/
+          cp em/external/rest/spring-actuator-demo/target/spring-actuator-demo-evomaster-runner.jar /dist/
+          cp em/external/rest/swagger-petstore/target/swagger-petstore-evomaster-runner.jar /dist/
+          cp em/external/rest/spring-ecommerce/target/spring-ecommerce-evomaster-runner.jar /dist/
+          cp em/external/graphql/petclinic-graphql/target/petclinic-graphql-evomaster-runner.jar /dist/
+          cp em/external/graphql/graphql-ncs/target/graphql-ncs-evomaster-runner.jar /dist/
+          cp em/external/graphql/graphql-scs/target/graphql-scs-evomaster-runner.jar /dist/
+          cp em/external/thrift/ncs/target/rpc-thrift-ncs-evomaster-runner.jar /dist/
+          cp em/external/thrift/scs/target/rpc-thrift-scs-evomaster-runner.jar /dist/
+          cp em/external/grpc/ncs/target/rpc-grpc-ncs-evomaster-runner.jar /dist/
+          cp em/external/grpc/scs/target/rpc-grpc-scs-evomaster-runner.jar /dist/
+        fi
+        echo 'JDK 8 Maven build completed'
+
+  build-jdk8-gradle:
+    build:
+      context: .
+      dockerfile: Dockerfile.jdk8
+    image: emb-build-jdk8
+    volumes:
+      - ${HOME}/.m2:/root/.m2
+      - gradle-cache-jdk8:/root/.gradle
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_8_GRADLE_FOLDER}:/build/jdk_8_gradle
+    working_dir: /build/jdk_8_gradle
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          gradle build -x test
+        else
+          (cd cs && gradle build -x test)
+        fi
+        cp cs/rest/erc20-rest-service/build/libs/erc20-rest-service-sut.jar /dist/
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          cp em/external/rest/erc20-rest-service/build/libs/erc20-rest-service-evomaster-runner.jar /dist/
+        fi
+        echo 'JDK 8 Gradle build completed'
+
+  build-jdk11-maven:
+    build:
+      context: .
+      dockerfile: Dockerfile.jdk11
+    image: emb-build-jdk11
+    volumes:
+      - ${HOME}/.m2:/root/.m2
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_11_MVN_FOLDER}:/build/jdk_11_maven
+    working_dir: /build/jdk_11_maven
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          mvn clean install -DskipTests
+        else
+          (cd cs && mvn clean install -DskipTests)
+        fi
+        cp cs/rest/tracking-system/target/tracking-system-sut.jar /dist/
+        cp cs/rest/cwa-verification-server/target/cwa-verification-sut.jar /dist/
+        cp cs/graphql/timbuctoo/timbuctoo-instancev4/target/timbuctoo-sut.jar /dist/
+        cp cs/rest-gui/market/market-rest/target/market-sut.jar /dist/
+        cp cs/rest/pay-publicapi/target/pay-publicapi-sut.jar /dist/
+        cp cs/rest/http-patch-spring/target/http-patch-spring-sut.jar /dist/
+        cp cs/rest-gui/quartz-manager/quartz-manager-parent/quartz-manager-web-showcase/target/quartz-manager-sut.jar /dist/
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          cp em/external/rest/tracking-system/target/tracking-system-evomaster-runner.jar /dist/
+          cp em/external/rest/cwa-verification/target/cwa-verification-evomaster-runner.jar /dist/
+          cp em/external/graphql/timbuctoo/target/timbuctoo-evomaster-runner.jar /dist/
+          cp em/external/rest/market/target/market-evomaster-runner.jar /dist/
+          cp em/external/rest/pay-publicapi/target/pay-publicapi-evomaster-runner.jar /dist/
+          cp em/external/rest/http-patch-spring/target/http-patch-spring-evomaster-runner.jar /dist/
+          cp em/external/rest/quartz-manager/target/quartz-manager-evomaster-runner.jar /dist/
+        fi
+        echo 'JDK 11 Maven build completed'
+
+  build-jdk11-gradle:
+    build:
+      context: .
+      dockerfile: Dockerfile.jdk11
+    image: emb-build-jdk11
+    volumes:
+      - ${HOME}/.m2:/root/.m2
+      - gradle-cache-jdk11:/root/.gradle
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_11_GRADLE_FOLDER}:/build/jdk_11_gradle
+    working_dir: /build/jdk_11_gradle
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          gradle build -x test
+        else
+          (cd cs && gradle build -x test)
+        fi
+        cp cs/graphql/patio-api/build/libs/patio-api-sut.jar /dist/
+        cp cs/rest/reservations-api/build/libs/reservations-api-sut.jar /dist/
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          cp em/external/graphql/patio-api/build/libs/patio-api-evomaster-runner.jar /dist/
+          cp em/external/rest/reservations-api/build/libs/reservations-api-evomaster-runner.jar /dist/
+        fi
+        echo 'JDK 11 Gradle build completed'
+
+  build-jdk17-maven:
+    build:
+      context: .
+      dockerfile: Dockerfile.jdk17
+    image: emb-build-jdk17
+    volumes:
+      - ${HOME}/.m2:/root/.m2
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_17_MVN_FOLDER}:/build/jdk_17_maven
+    working_dir: /build/jdk_17_maven
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          mvn clean install -DskipTests
+        else
+          (cd cs && mvn clean install -DskipTests)
+        fi
+        cp cs/web/spring-petclinic/target/spring-petclinic-sut.jar /dist/
+        cp cs/grpc/signal-registration/target/signal-registration-sut.jar /dist/
+        cp cs/rest/familie-ba-sak/target/familie-ba-sak-sut.jar /dist/
+        cp cs/rest/tiltaksgjennomforing/target/tiltaksgjennomforing-sut.jar /dist/
+        cp cs/rest/ohsome-api/target/ohsome-api-sut.jar /dist/
+        cp cs/rest/spring-rest-example/target/spring-rest-example-sut.jar /dist/
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          cp em/external/web/spring-petclinic/target/spring-petclinic-evomaster-runner.jar /dist/
+          cp em/external/grpc/signal-registration/target/signal-registration-evomaster-runner.jar /dist/
+          cp em/external/rest/familie-ba-sak/target/familie-ba-sak-evomaster-runner.jar /dist/
+          cp em/external/rest/tiltaksgjennomforing/target/tiltaksgjennomforing-evomaster-runner.jar /dist/
+          cp em/external/rest/ohsome-api/target/ohsome-api-evomaster-runner.jar /dist/
+          cp em/external/rest/spring-rest-example/target/spring-rest-example-evomaster-runner.jar /dist/
+        fi
+        echo 'JDK 17 Maven build completed'
+
+  build-jdk17-gradle:
+    build:
+      context: .
+      dockerfile: Dockerfile.jdk17
+    image: emb-build-jdk17
+    volumes:
+      - ${HOME}/.m2:/root/.m2
+      - gradle-cache-jdk17:/root/.gradle
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_17_GRADLE_FOLDER}:/build/jdk_17_gradle
+    working_dir: /build/jdk_17_gradle
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          gradle build -x test -x spotlessCheck -x spotlessJavaCheck
+        else
+          (cd cs && gradle build -x test -x spotlessCheck -x spotlessJavaCheck)
+        fi
+        cp cs/rest/bibliothek/build/libs/bibliothek-sut.jar /dist/
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          cp em/external/rest/bibliothek/build/libs/bibliothek-evomaster-runner.jar /dist/
+        fi
+        echo 'JDK 17 Gradle build completed'
+
+  build-jdk21-maven:
+    build:
+      context: .
+      dockerfile: Dockerfile.jdk21
+    image: emb-build-jdk21
+    volumes:
+      - ${HOME}/.m2:/root/.m2
+      - ${DIST_FOLDER}:/dist
+      - ${JDK_21_MVN_FOLDER}:/build/jdk_21_maven
+    working_dir: /build/jdk_21_maven
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          mvn clean install -DskipTests
+        else
+          (cd cs && mvn clean install -DskipTests)
+        fi
+        cp cs/rest/person-controller/target/person-controller-sut.jar /dist/
+        cp cs/rest-gui/webgoat/target/webgoat-sut.jar /dist/
+        cp cs/rest-gui/microcks/webapp/target/microcks-sut.jar /dist/
+        if [ "$${BUILD_EVOMASTER:-false}" = "true" ]; then
+          cp em/external/rest/person-controller/target/person-controller-evomaster-runner.jar /dist/
+          cp em/external/rest-gui/webgoat/target/webgoat-evomaster-runner.jar /dist/
+          cp em/external/rest-gui/microcks/target/microcks-evomaster-runner.jar /dist/
+        fi
+        echo 'JDK 21 Maven build completed'
+
+volumes:
+  gradle-cache-jdk8:
+  gradle-cache-jdk11:
+  gradle-cache-jdk17:

@@ -122,7 +122,8 @@ public class ExternalEvoMasterController extends ExternalSutController {
                 "-Dspring.datasource.username=sa",
                 "-Dspring.datasource.password",
                 "-Ddg-toolkit.derby.port=0",
-                "-Dspring.cache.type=NONE"
+                "-Dspring.cache.type=NONE",
+                "-Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration"
         };
     }
 

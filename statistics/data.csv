@@ -28,7 +28,7 @@ TRUE,restcountries,REST,Java,JDK 8,Maven,24,1977,,MPL,22,FALSE,https://github.co
 TRUE,scout-api,REST,Java,JDK 8,Maven,93,9736,H2,MIT,49,TRUE,https://github.com/mikaelsvensson/scout-api
 TRUE,spring-actuator-demo,REST,Java,JDK 8,Maven,5,117,,UNDEFINED,2,TRUE,https://github.com/callicoder/spring-boot-actuator-demo
 TRUE,spring-batch-rest,REST,Java,JDK 8,Maven,65,3668,,Apache,5,FALSE,https://github.com/chrisgleissner/spring-batch-rest
-TRUE,spring-ecommerce,REST,Java,JDK 8,Maven,58,2223,MongoOB;Redis;Elasticsearch,UNDEFINED,26,TRUE,https://github.com/SaiUpadhyayula/SpringAngularEcommerce
+TRUE,spring-ecommerce,REST,Java,JDK 8,Maven,58,2223,MongoDB;Redis;Elasticsearch,UNDEFINED,26,TRUE,https://github.com/SaiUpadhyayula/SpringAngularEcommerce
 TRUE,spring-rest-example,REST,Java,JDK 17,Maven,32,1426,MySQL,MIT,9,FALSE,https://github.com/phantasmicmeans/spring-boot-restful-api-example
 TRUE,swagger-petstore,REST,Java,JDK 8,Maven,23,1631,,Apache,19,FALSE,https://github.com/swagger-api/swagger-petstore
 TRUE,genome-nexus,REST,Java,JDK 8,Maven,405,30004,MongoDB,MIT,23,FALSE,https://github.com/genome-nexus/genome-nexus

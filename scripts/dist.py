@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-EVOMASTER_VERSION = "5.0.0"
+EVOMASTER_VERSION = "5.1.0"
 
 import sys
 import os
@@ -302,7 +302,7 @@ def call_gradle(java_home, folder):
 
     command = "gradlew"
 
-    if platform.system() == "Darwin":
+    if platform.system() in ["Darwin", "Linux"]:
         # make sure gradlew command is executable
         os.system("chmod +x " + os.getcwd() + "/" + folder + "/gradlew")
 

@@ -46,7 +46,7 @@ MAX_TIME_SECONDS = 3600
 TIMEOUT_BIN = shutil.which("timeout") or shutil.which("gtimeout")
 if TIMEOUT_BIN is None:
     raise Exception("Neither 'timeout' nor 'gtimeout' command found. On macOS, please run: 'brew install coreutils'")
-TIMEOUT_COMMAND = f"{TIMEOUT_BIN} 90m "
+TIMEOUT_COMMAND = f"\"{TIMEOUT_BIN}\" 90m "
 
 if not os.path.isdir(BASE_DIR):
     print("creating folder: " + BASE_DIR)
@@ -139,8 +139,7 @@ SUTS = [
                                     "jdk_21_maven/cs/rest-gui/microcks/distro/uber-async-minion/target/classes",
                                     "jdk_21_maven/cs/rest-gui/microcks/minions/async/target/classes",
                                     "jdk_21_maven/cs/rest-gui/microcks/webapp/target/classes"]),
-    Sut("ocvn",True,SLEEP,JSON,["jdk_8_maven/cs/rest-gui/ocvn/forms/target/classes",
-                           "jdk_8_maven/cs/rest-gui/ocvn/persistence/target/classes",
+    Sut("ocvn",True,SLEEP,JSON,["jdk_8_maven/cs/rest-gui/ocvn/persistence/target/classes",
                            "jdk_8_maven/cs/rest-gui/ocvn/persistence-mongodb/target/classes",
                            "jdk_8_maven/cs/rest-gui/ocvn/web/target/classes"]),
     Sut("ohsome-api",False,SLEEP,JSON,["jdk_17_maven/cs/rest/ohsome-api/target/classes"]),
@@ -350,7 +349,7 @@ SCHEMATHESIS="schemathesis"
 RESTLER="restler"
 EMREST="emrest"
 
-
+### NOTE: this function MUST be kept in sync between wb-exp.py and bb-exp.py
 def getTestDir(tool,sutname,port):
     return pathlib.PurePath(TESTS_DIR + "/"+ tool  + "/" + sutname + "/" + str(port)).as_posix()
 

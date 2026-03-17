@@ -70,11 +70,19 @@ public class ExternalEvoMasterController extends ExternalSutController {
 
     private static final String MONGODB_DATABASE_NAME = "reservations-api";
 
-    private static final GenericContainer mongodbContainer = new GenericContainer("bitnami/mongodb:" + MONGODB_VERSION)
-            .withTmpFs(Collections.singletonMap("/bitnami/mongodb", "rw"))
+    //private static final GenericContainer mongodbContainer = new GenericContainer("bitnami/mongodb:" + MONGODB_VERSION)
+      //      .withTmpFs(Collections.singletonMap("/bitnami/mongodb", "rw"))
+        //    .withEnv("MONGODB_REPLICA_SET_MODE", "primary")
+          //  .withEnv("ALLOW_EMPTY_PASSWORD", "yes")
+            //.withExposedPorts(MONGODB_PORT);
+
+    private static final GenericContainer mongodbContainer = new GenericContainer("mongo:" + MONGODB_VERSION)
+            .withTmpFs(Collections.singletonMap("/data/db", "rw"))
             .withEnv("MONGODB_REPLICA_SET_MODE", "primary")
             .withEnv("ALLOW_EMPTY_PASSWORD", "yes")
+            .withCommand("--replSet rs0")
             .withExposedPorts(MONGODB_PORT);
+
 
     private static final String rawPassword = "bar123";
     private static final String hashedPassword = "$2a$10$nEDY5j731yXGnQHyM39PWurJWr1FukegmKYYarK5WOoAMmgDs6D3u";
@@ -156,6 +164,9 @@ public class ExternalEvoMasterController extends ExternalSutController {
         mongodbContainer.start();
         mongoDbUrl = "mongodb://" + mongodbContainer.getContainerIpAddress() + ":" + mongodbContainer.getMappedPort(MONGODB_PORT) + "/" + MONGODB_DATABASE_NAME;
         mongoClient = MongoClients.create(mongoDbUrl);
+
+        mongoClient.getDatabase("admin")
+                .runCommand(new Document("replSetInitiate", new Document()));
     }
 
     @Override
