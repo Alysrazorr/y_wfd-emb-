@@ -9,17 +9,19 @@ on:
 
 jobs:
 
-  docker-build:
-    # this one doesn't use EvoMaster drivers
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout WFD
-        uses: actions/checkout@v6
-      - name: Build All With Docker
-        run: python scripts/dist-docker.py
+# TODO need to use profiles to avoid dependencies to EM in the build... would work on master, but not on develop due to snapshot versions
+#  docker-build:
+#    # this one doesn't use EvoMaster drivers
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout WFD
+#        uses: actions/checkout@v6
+#      - name: Build All With Docker
+#        run: python scripts/dist-docker.py
 
   direct-builds:
-    needs: docker-build
+#    TODO put back once issue fixed
+#    needs: docker-build
     runs-on:  ${{ matrix.os }}
     strategy:
       matrix:
