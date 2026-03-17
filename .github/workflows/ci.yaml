@@ -9,7 +9,17 @@ on:
 
 jobs:
 
-  projects:
+  docker-build:
+    # this one doesn't use EvoMaster drivers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout WFD
+        uses: actions/checkout@v6
+      - name: Build All With Docker
+        run: python scripts/dist-docker.py
+
+  direct-builds:
+    needs: docker-build
     runs-on:  ${{ matrix.os }}
     strategy:
       matrix:
@@ -58,13 +68,13 @@ jobs:
       - name: Install EvoMaster client-java
         run: mvn clean install -DskipTests
         working-directory: evomaster/client-java
-      - name: Setup JDK for EMB
+      - name: Setup JDK for WFD
         uses: actions/setup-java@v5
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: 'zulu'
-      - name: Checkout EMB
+      - name: Checkout WFD
         uses: actions/checkout@v6
-      - name: Build EMB
+      - name: Build WFD
         run: ${{ matrix.command }}
         working-directory: ${{ matrix.folder }}
